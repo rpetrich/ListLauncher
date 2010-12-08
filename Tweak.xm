@@ -1,13 +1,42 @@
 
 static id apps = nil;
+static id table = nil;
 
-static int compare_apps(id a, id b, void *c) { return [[a displayName] caseInsensitiveCompare:[b displayName]]; }
+static BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] isWildcat]; }
+
+%hook UITableView
+- (void)setAlpha:(float)alpha { if (self != table) %orig; }
+%end
+
+%hook SBSearchView
+- (id)initWithFrame:(CGRect)frame withContent:(id)content onWallpaper:(id)wallpaper {
+    self = %orig; table = [self tableView]; return self;
+}
+%end
 
 %hook SBSearchController
 %new(c@:)
-- (BOOL)shouldGTFO { return ![[[[self searchView] searchBar] text] isEqualToString:@""];; }
+- (BOOL)shouldGTFO { return ![[[[self searchView] searchBar] text] isEqualToString:@""]; }
 - (BOOL)_hasSearchResults { return YES; }
-- (float)tableView:(id)tv heightForRowAtIndexPath:(id)ip { return 44.0f; }
+- (float)tableView:(id)tv heightForRowAtIndexPath:(id)ip { return is_wildcat() ? 72.0f : 44.0f; }
+%new(i@:@i)
+- (int)tableView:(UITableView *)tableView sectionForSectionIndexTitle:(NSString *)title atIndex:(NSInteger)index {
+    int idx = [[UILocalizedIndexedCollation currentCollation] sectionForSectionIndexTitleAtIndex:index];
+    for (int i = 0; i < [apps count]; i++) {
+        if (idx <= [[UILocalizedIndexedCollation currentCollation] sectionForObject:[apps objectAtIndex:i] collationStringSelector:@selector(displayName)]) return i;
+    }
+    return -1;
+}
+%new(@@:@)
+- (NSArray *)sectionIndexTitlesForTableView:(UITableView *)tableView {
+    if ([self shouldGTFO]) {
+        return nil;
+    } else {
+        id titles = [[UILocalizedIndexedCollation currentCollation] sectionIndexTitles];
+        titles = [titles subarrayWithRange:NSMakeRange(0, [titles count] - 1)];
+        return titles;
+    }
+}
 - (id)tableView:(id)tv cellForRowAtIndexPath:(id)ip {
     if ([self shouldGTFO]) return %orig;
 
@@ -18,7 +47,7 @@ static int compare_apps(id a, id b, void *c) { return [[a displayName] caseInsen
         [cell clearContents];
     } else {
         cell = [[[objc_getClass("SBSearchTableViewCell") alloc] initWithStyle:(UITableViewCellStyle)0 reuseIdentifier:@"dude"] autorelease];
-        MSHookIvar<float>(cell, "_sectionHeaderWidth") = 39.0f;
+        MSHookIvar<float>(cell, "_sectionHeaderWidth") = is_wildcat() ? 68.0f : 39.0f;
         [cell setEdgeInset:0];
     }
 
@@ -56,8 +85,8 @@ static int compare_apps(id a, id b, void *c) { return [[a displayName] caseInsen
         apps = [[objc_getClass("SBApplicationController") sharedInstance] allApplications];
         id x = [[NSMutableArray array] retain];
         for (id app in apps) if (![[app tags] containsObject:@"hidden"]) [x addObject:app];
-        apps = x;
-        [apps sortUsingFunction:compare_apps context:NULL];
+        apps = [[UILocalizedIndexedCollation currentCollation] sortedArrayFromArray:x collationStringSelector:@selector(displayName)];
+        [apps retain];
     }
 
     return [apps count];
@@ -65,8 +94,8 @@ static int compare_apps(id a, id b, void *c) { return [[a displayName] caseInsen
 - (id)tableView:(id)tv viewForHeaderInSection:(int)s {
     if ([self shouldGTFO]) return %orig;
 
-    id v = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 39.0f, 44.0f)];
-    id m = [[[objc_getClass("SBIconModel") sharedInstance] applicationIconForDisplayIdentifier:[[apps objectAtIndex:s] displayIdentifier]] getIconImage:0];
+    id v = [[UIView alloc] initWithFrame:CGRectMake(0, 0, is_wildcat() ? 68.0f : 39.0f, is_wildcat() ? 72.0f : 44.0f)];
+    id m = [[[objc_getClass("SBIconModel") sharedInstance] applicationIconForDisplayIdentifier:[[apps objectAtIndex:s] displayIdentifier]] getIconImage:is_wildcat() ? 1 : 0];
     id i = [[objc_getClass("UIImageView") alloc] initWithImage:m];
     CGRect r = [i frame];
     r.size = [m size];
