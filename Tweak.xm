@@ -14,6 +14,25 @@ static BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] isWildcat
 }
 %end
 
+%hook SBApplicationController
+- (void)loadApplications {
+    %orig;
+
+    [apps release];
+    apps = [[NSMutableArray alloc] init];
+    id x = [NSMutableArray array];
+    id collation = [UILocalizedIndexedCollation currentCollation];
+    for (int i = 0; i < [[collation sectionTitles] count]; i++) [x addObject:[NSMutableArray array]];
+    for (id app in [self allApplications]) {
+        if (![[app tags] containsObject:@"hidden"]) {
+            int idx = [collation sectionForObject:app collationStringSelector:@selector(displayName)]; 
+            [[x objectAtIndex:idx] addObject:app];
+        }
+    }
+    for (id s in x) [apps addObjectsFromArray:[collation sortedArrayFromArray:s collationStringSelector:@selector(displayName)]];
+}
+%end
+
 %hook SBSearchController
 %new(c@:)
 - (BOOL)shouldGTFO { return ![[[[self searchView] searchBar] text] isEqualToString:@""]; }
@@ -33,7 +52,7 @@ static BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] isWildcat
         return nil;
     } else {
         id titles = [[UILocalizedIndexedCollation currentCollation] sectionIndexTitles];
-        titles = [titles subarrayWithRange:NSMakeRange(0, [titles count] - 1)];
+        //titles = [titles subarrayWithRange:NSMakeRange(0, [titles count] - 1)];
         return titles;
     }
 }
@@ -80,14 +99,6 @@ static BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] isWildcat
 }
 - (int)numberOfSectionsInTableView:(id)tv {
     if ([self shouldGTFO]) return %orig;
-
-    if (!apps) {
-        apps = [[objc_getClass("SBApplicationController") sharedInstance] allApplications];
-        id x = [[NSMutableArray array] retain];
-        for (id app in apps) if (![[app tags] containsObject:@"hidden"]) [x addObject:app];
-        apps = [[UILocalizedIndexedCollation currentCollation] sortedArrayFromArray:x collationStringSelector:@selector(displayName)];
-        [apps retain];
-    }
 
     return [apps count];
 }

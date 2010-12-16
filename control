@@ -5,7 +5,7 @@ Package: com.chpwn.listlauncher
 Section: Tweaks
 Pre-Depends: firmware (>= 4.0)
 Depends: mobilesubstrate
-Version: 1.1
+Version: 1.2
 Architecture: iphoneos-arm
 Description: Scrolling list of all your apps for quick access!
 Depiction: http://chpwn.com/cydia/listlauncher.html
