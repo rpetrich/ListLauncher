@@ -117,18 +117,20 @@ static inline BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] is
     if ([self shouldGTFO]) return %orig;
 
     id v = [[UIView alloc] initWithFrame:CGRectMake(0, 0, sectionHeaderWidth, searchRowHeight)];
-    id m = [[[objc_getClass("SBIconModel") sharedInstance] applicationIconForDisplayIdentifier:[[apps objectAtIndex:s] displayIdentifier]] getIconImage:is_wildcat() ? 1 : 0];
-    id i = [[objc_getClass("UIImageView") alloc] initWithImage:m];
+    id m = [[[objc_getClass("SBIconModel") sharedInstance] applicationIconForDisplayIdentifier:[[apps objectAtIndex:s] displayIdentifier]] getIconImage:is_wildcat()];
+    id i = [[UIImageView alloc] initWithImage:m];
     CGRect r = [i frame];
     r.size = [m size];
-    r.origin.y = ([v frame].size.height - r.size.height) / 2;
-    r.origin.x = ([v frame].size.width - r.size.width) / 2;
+    CGSize size = [v frame].size;
+    r.origin.y = (size.height - r.size.height) * 0.5f;
+    r.origin.x = (size.width - r.size.width) * 0.5f;
     [i setFrame:r];
     [v addSubview:i];
+    [i release];
     [v setOpaque:0];
     [v setUserInteractionEnabled:NO];
 
-    return v;
+    return [v autorelease];
 }
 %end
 
