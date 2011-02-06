@@ -1,8 +1,11 @@
+#import <UIKit/UIKit.h>
 
 static id apps = nil;
-static id table = nil;
+static UITableView *table = nil;
+static CGFloat sectionHeaderWidth;
+static CGFloat searchRowHeight;
 
-static BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] isWildcat]; }
+static inline BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] isWildcat]; }
 
 %hook UITableView
 - (void)setAlpha:(float)alpha { if (self != table) %orig; }
@@ -10,7 +13,14 @@ static BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] isWildcat
 
 %hook SBSearchView
 - (id)initWithFrame:(CGRect)frame withContent:(id)content onWallpaper:(id)wallpaper {
-    self = %orig; table = [self tableView]; return self;
+    if ((self = %orig)) {
+        table = [self tableView];
+        BOOL isWildcat = is_wildcat();
+        sectionHeaderWidth = isWildcat ? 68.0f : 39.0f;
+        searchRowHeight = isWildcat ? 72.0f : 44.0f;
+        table.rowHeight = searchRowHeight;
+    }
+    return self;
 }
 %end
 
@@ -37,7 +47,8 @@ static BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] isWildcat
 %new(c@:)
 - (BOOL)shouldGTFO { return ![[[[self searchView] searchBar] text] isEqualToString:@""]; }
 - (BOOL)_hasSearchResults { return YES; }
-- (float)tableView:(id)tv heightForRowAtIndexPath:(id)ip { return is_wildcat() ? 72.0f : 44.0f; }
+- (BOOL)respondsToSelector:(SEL)selector { return selector == @selector(tableView:heightForRowAtIndexPath:) ? NO : %orig; }
+- (float)tableView:(id)tv heightForRowAtIndexPath:(id)ip { return searchRowHeight; }
 %new(i@:@i)
 - (int)tableView:(UITableView *)tableView sectionForSectionIndexTitle:(NSString *)title atIndex:(NSInteger)index {
     int idx = [[UILocalizedIndexedCollation currentCollation] sectionForSectionIndexTitleAtIndex:index];
@@ -66,7 +77,7 @@ static BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] isWildcat
         [cell clearContents];
     } else {
         cell = [[[objc_getClass("SBSearchTableViewCell") alloc] initWithStyle:(UITableViewCellStyle)0 reuseIdentifier:@"dude"] autorelease];
-        MSHookIvar<float>(cell, "_sectionHeaderWidth") = is_wildcat() ? 68.0f : 39.0f;
+        MSHookIvar<float>(cell, "_sectionHeaderWidth") = sectionHeaderWidth;
         [cell setEdgeInset:0];
     }
 
@@ -105,7 +116,7 @@ static BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] isWildcat
 - (id)tableView:(id)tv viewForHeaderInSection:(int)s {
     if ([self shouldGTFO]) return %orig;
 
-    id v = [[UIView alloc] initWithFrame:CGRectMake(0, 0, is_wildcat() ? 68.0f : 39.0f, is_wildcat() ? 72.0f : 44.0f)];
+    id v = [[UIView alloc] initWithFrame:CGRectMake(0, 0, sectionHeaderWidth, searchRowHeight)];
     id m = [[[objc_getClass("SBIconModel") sharedInstance] applicationIconForDisplayIdentifier:[[apps objectAtIndex:s] displayIdentifier]] getIconImage:is_wildcat() ? 1 : 0];
     id i = [[objc_getClass("UIImageView") alloc] initWithImage:m];
     CGRect r = [i frame];
