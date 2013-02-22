@@ -1,4 +1,5 @@
 #import <UIKit/UIKit.h>
+#import <AppList.h> //Using AppList to generate list of apps
 
 static id apps = nil;
 static UITableView *table = nil;
@@ -50,12 +51,41 @@ static inline BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] is
 - (BOOL)respondsToSelector:(SEL)selector { return selector == @selector(tableView:heightForRowAtIndexPath:) ? NO : %orig; }
 - (float)tableView:(id)tv heightForRowAtIndexPath:(id)ip { return searchRowHeight; }
 %new(i@:@i)
+/* When I installed it on my phone, the table was empty... and this generates the table? So this is bad?
 - (int)tableView:(UITableView *)tableView sectionForSectionIndexTitle:(NSString *)title atIndex:(NSInteger)index {
     int idx = [[UILocalizedIndexedCollation currentCollation] sectionForSectionIndexTitleAtIndex:index];
     for (int i = 0; i < [apps count]; i++) {
         if (idx <= [[UILocalizedIndexedCollation currentCollation] sectionForObject:[apps objectAtIndex:i] collationStringSelector:@selector(displayName)]) return i;
     }
     return -1;
+}
+*/ 
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{ //This is straight from the applist sample code. I have never used Objective-C before so idk what this stuff means. It seems like variables are just coming out of nowhere. I assume 
+  // they are from the api or something?
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    NSString *displayIdentifier = [dataSource displayIdentifierForIndexPath:indexPath];
+    ALApplicationList *al = [ALApplicationList sharedApplicationList];
+    UIAlertView *av = [[UIAlertView alloc] initWithTitle:[al.applications objectForKey:displayIdentifier] message:[displayIdentifier stringByAppendingString:@"\n\n\n\n\n\n"] delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
+    [av show];
+    CGSize avSize = av.bounds.size;
+    UIImage *largeIcon = [al iconOfSize:ALApplicationIconSizeLarge forDisplayIdentifier:displayIdentifier];
+    if (largeIcon) {
+        UIImageView *imageView = [[UIImageView alloc] initWithImage:largeIcon];
+        CGSize imageSize = largeIcon.size;
+        imageView.frame = (CGRect){ { roundf((avSize.width - imageSize.width) * (1.0f / 3.0f)), roundf((avSize.height - imageSize.height) * 0.5f) }, imageSize };
+        [av addSubview:imageView];
+        [imageView release];
+    }
+    UIImage *smallIcon = [al iconOfSize:ALApplicationIconSizeSmall forDisplayIdentifier:displayIdentifier];
+    if (smallIcon) {
+        UIImageView *imageView = [[UIImageView alloc] initWithImage:smallIcon];
+        CGSize imageSize = smallIcon.size;
+        imageView.frame = (CGRect){ { roundf((avSize.width - imageSize.width) * (2.0f / 3.0f)), roundf((avSize.height - imageSize.height) * 0.5f) }, imageSize };
+        [av addSubview:imageView];
+        [imageView release];
+    }
+    [av release];
 }
 %new(@@:@)
 - (NSArray *)sectionIndexTitlesForTableView:(UITableView *)tableView {
@@ -133,5 +163,3 @@ static inline BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] is
     return [v autorelease];
 }
 %end
-
-
