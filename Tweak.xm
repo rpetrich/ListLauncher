@@ -30,42 +30,44 @@ static inline BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] is
 
 %hook SBApplicationController
 - (void)loadApplications {
+    //This is what places the apps in the uitable
+    // or really just places them in an array which will then be placed in the table
     %orig;
 
     [apps release];
     apps = [[NSMutableArray alloc] init];
     id x = [NSMutableArray array];
     id collation = [UILocalizedIndexedCollation currentCollation];
-    for (int i = 0; i < [[collation sectionTitles] count]; i++) [x addObject:[NSMutableArray array]];
+    for (int i = 0; i < [[collation sectionTitles] count]; i++)
+        [x addObject:[NSMutableArray array]];
     for (id app in [self allApplications]) {
         if (![[app tags] containsObject:@"hidden"]) {
             int idx = [collation sectionForObject:app collationStringSelector:@selector(displayName)]; 
             [[x objectAtIndex:idx] addObject:app];
         }
     }
-    for (id s in x) [apps addObjectsFromArray:[collation sortedArrayFromArray:s collationStringSelector:@selector(displayName)]];
+    for (id s in x) 
+        [apps addObjectsFromArray:[collation sortedArrayFromArray:s collationStringSelector:@selector(displayName)]];
 }
 %end
 
 %hook SBSearchController
 %new(c@:)
 - (BOOL)shouldGTFO { return ![[[[self searchView] searchBar] text] isEqualToString:@""]; }
+//returns false when there is no search term
 
 - (BOOL)_hasSearchResults { return YES; }
 
 - (BOOL)respondsToSelector: (SEL)selector { 
     return selector == @selector(tableView:heightForRowAtIndexPath:) ? NO : %orig; 
 }
-- (float)tableView:
-  (id)tv heightForRowAtIndexPath:
-  (id)ip { 
+
+- (float)tableView: (id)tv heightForRowAtIndexPath: (id)ip { 
     return searchRowHeight; 
 }
 
 %new(i@:@i)
-- (int)tableView: (UITableView *)tableView sectionForSectionIndexTitle:
-  (NSString *)title atIndex:
-  (NSInteger)index {
+- (int)tableView: (UITableView *)tableView sectionForSectionIndexTitle: (NSString *)title atIndex: (NSInteger)index {
     int idx = [[UILocalizedIndexedCollation currentCollation] sectionForSectionIndexTitleAtIndex:index];
     for (int i = 0; i < [apps count]; i++) {
         if (idx <= [[UILocalizedIndexedCollation currentCollation] sectionForObject:[apps objectAtIndex:i] collationStringSelector:@selector(displayName)])
@@ -76,6 +78,7 @@ static inline BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] is
 
 /* From AppList */
 - (void)tableView: (UITableView *)tableView didSelectRowAtIndexPath: (NSIndexPath *)indexPath { 
+    // What happens when a row is clicked?
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
     NSString *displayIdentifier = [dataSource displayIdentifierForIndexPath:indexPath];
     ALApplicationList *al = [ALApplicationList sharedApplicationList];
@@ -113,6 +116,7 @@ static inline BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] is
     }
 }
 - (id)tableView: (id)tv cellForRowAtIndexPath: (id)ip {
+    //So this places the app shit at the row for the uitable
     if ([self shouldGTFO]) return %orig;
 
     int s = [ip section];
@@ -133,8 +137,8 @@ static inline BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] is
     else [cell setFirstInTableView:NO];
 
     [cell setTitle:[[apps objectAtIndex:s] displayName]];
-    //[cell setAuxiliaryTitle:];
-    //[cell setSubtitle:];
+    //[cell setAuxiliaryTitle:]; //It would be cool if it showed the last message etc; similiar to runninglist
+    //[cell setSubtitle:]; //see above
     [cell setFirstInSection:YES];
 
     [[[self searchView] tableView] setScrollEnabled:YES];
