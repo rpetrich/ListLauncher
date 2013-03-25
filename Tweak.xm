@@ -16,10 +16,7 @@ static inline BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] is
 %end
 
 %hook SBSearchView
-- (id)initWithFrame:
-  (CGRect)frame withContent:
-  (id)content onWallpaper:
-  (id)wallpaper {
+- (id)initWithFrame: (CGRect)frame withContent: (id)content onWallpaper: (id)wallpaper {
     if ((self = %orig)) {
         table = [self tableView];
         BOOL isWildcat = is_wildcat();
@@ -56,8 +53,7 @@ static inline BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] is
 
 - (BOOL)_hasSearchResults { return YES; }
 
-- (BOOL)respondsToSelector:
-  (SEL)selector { 
+- (BOOL)respondsToSelector: (SEL)selector { 
     return selector == @selector(tableView:heightForRowAtIndexPath:) ? NO : %orig; 
 }
 - (float)tableView:
@@ -67,29 +63,26 @@ static inline BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] is
 }
 
 %new(i@:@i)
-/* When I installed it on my phone, the table was empty... and this generates the table? So this is bad?
-- (int)tableView:
-  (UITableView *)tableView sectionForSectionIndexTitle:
+- (int)tableView: (UITableView *)tableView sectionForSectionIndexTitle:
   (NSString *)title atIndex:
   (NSInteger)index {
     int idx = [[UILocalizedIndexedCollation currentCollation] sectionForSectionIndexTitleAtIndex:index];
     for (int i = 0; i < [apps count]; i++) {
-        if (idx <= [[UILocalizedIndexedCollation currentCollation] sectionForObject:[apps objectAtIndex:i] collationStringSelector:@selector(displayName)]) return i;
+        if (idx <= [[UILocalizedIndexedCollation currentCollation] sectionForObject:[apps objectAtIndex:i] collationStringSelector:@selector(displayName)])
+            return i;
     }
     return -1;
 }
-*/ 
-- (void)tableView:
-  (UITableView *)tableView didSelectRowAtIndexPath:
-  (NSIndexPath *)indexPath { 
-  //This is straight from the applist sample code. I have never used Objective-C before so idk what this stuff means. It seems like variables are just coming out of nowhere. I assume 
-  // they are from the api or something?
+
+/* From AppList */
+- (void)tableView: (UITableView *)tableView didSelectRowAtIndexPath: (NSIndexPath *)indexPath { 
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
     NSString *displayIdentifier = [dataSource displayIdentifierForIndexPath:indexPath];
     ALApplicationList *al = [ALApplicationList sharedApplicationList];
     UIAlertView *av = [[UIAlertView alloc] initWithTitle:[al.applications objectForKey:displayIdentifier] message:[displayIdentifier stringByAppendingString:@"\n\n\n\n\n\n"] delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
     [av show];
     CGSize avSize = av.bounds.size;
+    // Creates a popup with the application's icon when clicked
     UIImage *largeIcon = [al iconOfSize:ALApplicationIconSizeLarge forDisplayIdentifier:displayIdentifier];
     if (largeIcon) {
         UIImageView *imageView = [[UIImageView alloc] initWithImage:largeIcon];
@@ -108,9 +101,9 @@ static inline BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] is
     }
     [av release];
 }
+
 %new(@@:@)
-- (NSArray *)sectionIndexTitlesForTableView:
-  (UITableView *)tableView {
+- (NSArray *)sectionIndexTitlesForTableView: (UITableView *)tableView {
     if ([self shouldGTFO]) {
         return nil;
     } else {
@@ -119,9 +112,7 @@ static inline BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] is
         return titles;
     }
 }
-- (id)tableView:
-  (id)tv cellForRowAtIndexPath:
-  (id)ip {
+- (id)tableView: (id)tv cellForRowAtIndexPath: (id)ip {
     if ([self shouldGTFO]) return %orig;
 
     int s = [ip section];
@@ -151,29 +142,23 @@ static inline BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] is
 
     return cell;
 }
-- (void)tableView:
-  (id)tv didSelectRowAtIndexPath:
-  (id)ip {
+- (void)tableView: (id)tv didSelectRowAtIndexPath: (id)ip {
     if ([self shouldGTFO]) { %orig; return; }
 
     id a = [apps objectAtIndex:[ip section]];
     [[objc_getClass("SBUIController") sharedInstance] activateApplicationAnimated:a];
     [tv deselectRowAtIndexPath:ip animated:YES];
 }
-- (int)tableView:
-  (id)tv numberOfRowsInSection:
-  (int)s {
+- (int)tableView: (id)tv numberOfRowsInSection: (int)s {
     if ([self shouldGTFO]) return %orig;
     else return 1;
 }
-- (int)numberOfSectionsInTableView:(id)tv {
+- (int)numberOfSectionsInTableView: (id)tv {
     if ([self shouldGTFO]) return %orig;
 
     return [apps count];
 }
-- (id)tableView:
-  (id)tv viewForHeaderInSection:
-  (int)s {
+- (id)tableView: (id)tv viewForHeaderInSection: (int)s {
     if ([self shouldGTFO]) return %orig;
 
     id v = [[UIView alloc] initWithFrame:CGRectMake(0, 0, sectionHeaderWidth, searchRowHeight)];
