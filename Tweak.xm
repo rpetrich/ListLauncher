@@ -2,6 +2,7 @@
 #import <AppList.h> //Using AppList to generate list of apps
 
 static id apps = nil;
+static ALApplicationTableDataSource *dataSource;
 static UITableView *table = nil;
 static CGFloat sectionHeaderWidth;
 static CGFloat searchRowHeight;
@@ -35,19 +36,27 @@ static inline BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] is
     %orig;
 
     [apps release];
-    apps = [[NSMutableArray alloc] init];
-    id x = [NSMutableArray array];
-    id collation = [UILocalizedIndexedCollation currentCollation];
-    for (int i = 0; i < [[collation sectionTitles] count]; i++)
-        [x addObject:[NSMutableArray array]];
-    for (id app in [self allApplications]) {
-        if (![[app tags] containsObject:@"hidden"]) {
-            int idx = [collation sectionForObject:app collationStringSelector:@selector(displayName)]; 
-            [[x objectAtIndex:idx] addObject:app];
-        }
+
+    apps = [ALApplicationList sharedApplicationList];
+
+    if ((self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil])) {
+        dataSource = [[ALApplicationTableDataSource alloc] init];
+        dataSource.sectionDescriptors = [ALApplicationTableDataSource standardSectionDescriptors];
     }
-    for (id s in x) 
-        [apps addObjectsFromArray:[collation sortedArrayFromArray:s collationStringSelector:@selector(displayName)]];
+
+    // apps = [[NSMutableArray alloc] init];
+    // id x = [NSMutableArray array];
+    // id collation = [UILocalizedIndexedCollation currentCollation];
+    // for (int i = 0; i < [[collation sectionTitles] count]; i++)
+    //     [x addObject:[NSMutableArray array]];
+    // for (id app in [self allApplications]) {
+    //     if (![[app tags] containsObject:@"hidden"]) {
+    //         int idx = [collation sectionForObject:app collationStringSelector:@selector(displayName)]; 
+    //         [[x objectAtIndex:idx] addObject:app];
+    //     }
+    // }
+    // for (id s in x) 
+    //     [apps addObjectsFromArray:[collation sortedArrayFromArray:s collationStringSelector:@selector(displayName)]];
 }
 %end
 
@@ -74,35 +83,6 @@ static inline BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] is
             return i;
     }
     return -1;
-}
-
-/* From AppList */
-- (void)tableView: (UITableView *)tableView didSelectRowAtIndexPath: (NSIndexPath *)indexPath { 
-    // determines what happens when a row is clicked?
-    [tableView deselectRowAtIndexPath:indexPath animated:YES];
-    NSString *displayIdentifier = [dataSource displayIdentifierForIndexPath:indexPath];
-    ALApplicationList *al = [ALApplicationList sharedApplicationList];
-    UIAlertView *av = [[UIAlertView alloc] initWithTitle:[al.applications objectForKey:displayIdentifier] message:[displayIdentifier stringByAppendingString:@"\n\n\n\n\n\n"] delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
-    [av show];
-    CGSize avSize = av.bounds.size;
-    // Creates a popup with the application's icon when clicked
-    UIImage *largeIcon = [al iconOfSize:ALApplicationIconSizeLarge forDisplayIdentifier:displayIdentifier];
-    if (largeIcon) {
-        UIImageView *imageView = [[UIImageView alloc] initWithImage:largeIcon];
-        CGSize imageSize = largeIcon.size;
-        imageView.frame = (CGRect){ { roundf((avSize.width - imageSize.width) * (1.0f / 3.0f)), roundf((avSize.height - imageSize.height) * 0.5f) }, imageSize };
-        [av addSubview:imageView];
-        [imageView release];
-    }
-    UIImage *smallIcon = [al iconOfSize:ALApplicationIconSizeSmall forDisplayIdentifier:displayIdentifier];
-    if (smallIcon) {
-        UIImageView *imageView = [[UIImageView alloc] initWithImage:smallIcon];
-        CGSize imageSize = smallIcon.size;
-        imageView.frame = (CGRect){ { roundf((avSize.width - imageSize.width) * (2.0f / 3.0f)), roundf((avSize.height - imageSize.height) * 0.5f) }, imageSize };
-        [av addSubview:imageView];
-        [imageView release];
-    }
-    [av release];
 }
 
 %new(@@:@)
@@ -136,7 +116,8 @@ static inline BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] is
     if ([ip section] == 0) [cell setFirstInTableView:YES];
     else [cell setFirstInTableView:NO];
 
-    [cell setTitle:[[apps objectAtIndex:s] displayName]];
+    //[cell setTitle:[[apps objectAtIndex:s] displayName]];
+    [cell setTitle:[[dataSource displayIdentifierForIndexPath:indexPath] displayName]];
     //[cell setAuxiliaryTitle:]; //It would be cool if it showed the last message etc; similiar to runninglist
     //[cell setSubtitle:]; //see above
     [cell setFirstInSection:YES];
@@ -147,12 +128,14 @@ static inline BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] is
     return cell;
 }
 - (void)tableView: (id)tv didSelectRowAtIndexPath: (id)ip {
+    //This launches the app
     if ([self shouldGTFO]) { %orig; return; }
 
     id a = [apps objectAtIndex:[ip section]];
     [[objc_getClass("SBUIController") sharedInstance] activateApplicationAnimated:a];
     [tv deselectRowAtIndexPath:ip animated:YES];
 }
+
 - (int)tableView: (id)tv numberOfRowsInSection: (int)s {
     if ([self shouldGTFO]) return %orig;
     else return 1;
