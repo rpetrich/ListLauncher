@@ -78,7 +78,7 @@ static inline BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] is
 
 /* From AppList */
 - (void)tableView: (UITableView *)tableView didSelectRowAtIndexPath: (NSIndexPath *)indexPath { 
-    // What happens when a row is clicked?
+    // determines what happens when a row is clicked?
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
     NSString *displayIdentifier = [dataSource displayIdentifierForIndexPath:indexPath];
     ALApplicationList *al = [ALApplicationList sharedApplicationList];
