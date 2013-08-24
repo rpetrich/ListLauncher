@@ -1,8 +1,13 @@
 #import <UIKit/UIKit.h>
 #import <AppList.h> //Using AppList to generate list of apps
 
-static id apps = nil;
-static ALApplicationTableDataSource *dataSource;
+@interface AppListViewController : UITableViewController {
+@private 
+	ALApplicationTableDataSource *apps; 
+}
+@end;
+
+static id app_id = nil; 
 static UITableView *table = nil;
 static CGFloat sectionHeaderWidth;
 static CGFloat searchRowHeight;
@@ -40,8 +45,8 @@ static inline BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] is
     apps = [ALApplicationList sharedApplicationList];
 
     if ((self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil])) {
-        dataSource = [[ALApplicationTableDataSource alloc] init];
-        dataSource.sectionDescriptors = [ALApplicationTableDataSource standardSectionDescriptors];
+        apps = [[ALApplicationTableDataSource alloc] init];
+        apps.sectionDescriptors = [ALApplicationTableDataSource standardSectionDescriptors];
     }
 
     // apps = [[NSMutableArray alloc] init];
@@ -77,12 +82,51 @@ static inline BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] is
 
 %new(i@:@i)
 - (int)tableView: (UITableView *)tableView sectionForSectionIndexTitle: (NSString *)title atIndex: (NSInteger)index {
-    int idx = [[UILocalizedIndexedCollation currentCollation] sectionForSectionIndexTitleAtIndex:index];
+    // Asks the datasource to return the index for the section having the given 
+title and section title index
+   
+    int idx = [[UILocalizedIndexedCollation currentCollation]
+sectionForSectionIndexTitleAtIndex:index];
     for (int i = 0; i < [apps count]; i++) {
         if (idx <= [[UILocalizedIndexedCollation currentCollation] sectionForObject:[apps objectAtIndex:i] collationStringSelector:@selector(displayName)])
             return i;
     }
     return -1;
+}
+
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath 
+*)indexPath
+{
+        [tableView deselectRowAtIndexPath:indexPath animated:YES];
+        NSString *displayIdentifier = [dataSource 
+displayIdentifierForIndexPath:indexPath];
+        ALApplicationList *al = [ALApplicationList sharedApplicationList];
+        UIAlertView *av = [[UIAlertView alloc] initWithTitle:[al.applications 
+objectForKey:displ$
+        [av show];
+        CGSize avSize = av.bounds.size;
+        UIImage *largeIcon = [al iconOfSize:ALApplicationIconSizeLarge 
+forDisplayIdentifier:disp$
+        if (largeIcon) {
+                UIImageView *imageView = [[UIImageView alloc] initWithImage:largeIcon];
+                CGSize imageSize = largeIcon.size;
+                imageView.frame = (CGRect){ { roundf((avSize.width - imageSize.width) * 
+(1.0f / $
+                [av addSubview:imageView];
+                [imageView release];
+        }
+        UIImage *smallIcon = [al iconOfSize:ALApplicationIconSizeSmall 
+forDisplayIdentifier:disp$
+        if (smallIcon) {
+                UIImageView *imageView = [[UIImageView alloc] initWithImage:smallIcon];
+                CGSize imageSize = smallIcon.size;
+                imageView.frame = (CGRect){ { roundf((avSize.width - imageSize.width) * 
+(2.0f / $
+                [av addSubview:imageView];
+                [imageView release];
+        }
+        [av release];
 }
 
 %new(@@:@)
@@ -96,7 +140,8 @@ static inline BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] is
     }
 }
 - (id)tableView: (id)tv cellForRowAtIndexPath: (id)ip {
-    //So this places the app shit at the row for the uitable
+    //Places the app information at the row for the uitable
+    
     if ([self shouldGTFO]) return %orig;
 
     int s = [ip section];
