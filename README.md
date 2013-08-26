@@ -6,4 +6,4 @@ Launch apps fast.
 
 --- 
 
-My attempt to fix this tweak and learn obj-c
+iOS6+ compatibale using [AppList](https://github.com/rpetrich/AppList) API. Original code by chpwn and on rpetrich's [repository](https://github.com/rpetrich/ListLauncher). 
