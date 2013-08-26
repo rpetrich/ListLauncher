@@ -36,8 +36,7 @@ static inline BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] is
 
 %hook SBApplicationController
 - (void)loadApplications {
-    //This is what places the apps in the uitable
-    // or really just places them in an array which will then be placed in the table
+    // Gets the list of all the applications
     %orig;
 
     [apps release];
@@ -48,20 +47,6 @@ static inline BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] is
         apps = [[ALApplicationTableDataSource alloc] init];
         apps.sectionDescriptors = [ALApplicationTableDataSource standardSectionDescriptors];
     }
-
-    // apps = [[NSMutableArray alloc] init];
-    // id x = [NSMutableArray array];
-    // id collation = [UILocalizedIndexedCollation currentCollation];
-    // for (int i = 0; i < [[collation sectionTitles] count]; i++)
-    //     [x addObject:[NSMutableArray array]];
-    // for (id app in [self allApplications]) {
-    //     if (![[app tags] containsObject:@"hidden"]) {
-    //         int idx = [collation sectionForObject:app collationStringSelector:@selector(displayName)]; 
-    //         [[x objectAtIndex:idx] addObject:app];
-    //     }
-    // }
-    // for (id s in x) 
-    //     [apps addObjectsFromArray:[collation sortedArrayFromArray:s collationStringSelector:@selector(displayName)]];
 }
 %end
 
@@ -82,8 +67,7 @@ static inline BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] is
 
 %new(i@:@i)
 - (int)tableView: (UITableView *)tableView sectionForSectionIndexTitle: (NSString *)title atIndex: (NSInteger)index {
-    // Asks the datasource to return the index for the section having the given 
-title and section title index
+    // Asks the datasource to return the index for the section having the given title and section title index
    
     int idx = [[UILocalizedIndexedCollation currentCollation]
 sectionForSectionIndexTitleAtIndex:index];
@@ -94,43 +78,14 @@ sectionForSectionIndexTitleAtIndex:index];
     return -1;
 }
 
-
-- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath 
-*)indexPath
-{
-        [tableView deselectRowAtIndexPath:indexPath animated:YES];
-        NSString *displayIdentifier = [dataSource 
-displayIdentifierForIndexPath:indexPath];
-        ALApplicationList *al = [ALApplicationList sharedApplicationList];
-        UIAlertView *av = [[UIAlertView alloc] initWithTitle:[al.applications 
-objectForKey:displ$
-        [av show];
-        CGSize avSize = av.bounds.size;
-        UIImage *largeIcon = [al iconOfSize:ALApplicationIconSizeLarge 
-forDisplayIdentifier:disp$
-        if (largeIcon) {
-                UIImageView *imageView = [[UIImageView alloc] initWithImage:largeIcon];
-                CGSize imageSize = largeIcon.size;
-                imageView.frame = (CGRect){ { roundf((avSize.width - imageSize.width) * 
-(1.0f / $
-                [av addSubview:imageView];
-                [imageView release];
-        }
-        UIImage *smallIcon = [al iconOfSize:ALApplicationIconSizeSmall 
-forDisplayIdentifier:disp$
-        if (smallIcon) {
-                UIImageView *imageView = [[UIImageView alloc] initWithImage:smallIcon];
-                CGSize imageSize = smallIcon.size;
-                imageView.frame = (CGRect){ { roundf((avSize.width - imageSize.width) * 
-(2.0f / $
-                [av addSubview:imageView];
-                [imageView release];
-        }
-        [av release];
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath*)indexPath
+{ //Tells the delegate what row is now selected
+    %orig;
 }
 
 %new(@@:@)
 - (NSArray *)sectionIndexTitlesForTableView: (UITableView *)tableView {
+    //return the titles for the sections for a table view
     if ([self shouldGTFO]) {
         return nil;
     } else {
@@ -140,8 +95,8 @@ forDisplayIdentifier:disp$
     }
 }
 - (id)tableView: (id)tv cellForRowAtIndexPath: (id)ip {
-    //Places the app information at the row for the uitable
-    
+    // Asks the data source for a cell to insert in a particular 
+    // location of the table view. (required)
     if ([self shouldGTFO]) return %orig;
 
     int s = [ip section];
@@ -187,10 +142,12 @@ forDisplayIdentifier:disp$
 }
 - (int)numberOfSectionsInTableView: (id)tv {
     if ([self shouldGTFO]) return %orig;
-
     return [apps count];
 }
 - (id)tableView: (id)tv viewForHeaderInSection: (int)s {
+    //Asks the delegate for a view object to display in the 
+    // header of the specified section of the table view.
+
     if ([self shouldGTFO]) return %orig;
 
     id v = [[UIView alloc] initWithFrame:CGRectMake(0, 0, sectionHeaderWidth, searchRowHeight)];
