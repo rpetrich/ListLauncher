@@ -18,7 +18,7 @@ typedef NSUInteger ALApplicationIconSize;
 + (ALApplicationList *)sharedApplicationList;
 
 @property (nonatomic, readonly) NSDictionary *applications;
-- (NSDictionary *)applicationsFilteredUsingPredicate:(NSPredicate *)predicate;
+// - (NSDictionary *)applicationsFilteredUsingPredicate:(NSPredicate *)predicate;
 
 - (id)valueForKeyPath:(NSString *)keyPath forDisplayIdentifier:(NSString *)displayIdentifier;
 - (id)valueForKey:(NSString *)keyPath forDisplayIdentifier:(NSString *)displayIdentifier;
