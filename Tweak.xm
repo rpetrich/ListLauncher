@@ -1,11 +1,7 @@
 #import <UIKit/UIKit.h>
 #import <AppList.h> //Using AppList to generate list of apps
 
-@interface AppListViewController : UITableViewController {
-@private 
-	ALApplicationTableDataSource *apps; 
-}
-@end;
+ALApplicationTableDataSource *apps;
 
 static id app_id = nil; 
 static UITableView *table = nil;
@@ -39,20 +35,17 @@ static inline BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] is
     // Gets the list of all the applications
     %orig;
 
-    [apps release];
-
     apps = [ALApplicationList sharedApplicationList];
-
-    if ((self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil])) {
-        apps = [[ALApplicationTableDataSource alloc] init];
-        apps.sectionDescriptors = [ALApplicationTableDataSource standardSectionDescriptors];
-    }
+    //apps = [[ALApplicationTableDataSouce alloc] init];
+    apps.sectionDescriptors = [ALApplicationTableDataSource standardSectionDescriptors];
+    
 }
 %end
 
 %hook SBSearchController
 %new(c@:)
-- (BOOL)shouldGTFO { return ![[[[self searchView] searchBar] text] isEqualToString:@""]; }
++ (BOOL)shouldGTFO { return ![[[[self searchView] searchBar] text] isEqualToString:@""]; 
+}
 //returns false when there is no search term
 
 - (BOOL)_hasSearchResults { return YES; }
@@ -65,28 +58,33 @@ static inline BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] is
     return searchRowHeight; 
 }
 
-%new(i@:@i)
+//%new(i@:@i)
 - (int)tableView: (UITableView *)tableView sectionForSectionIndexTitle: (NSString *)title atIndex: (NSInteger)index {
     // Asks the datasource to return the index for the section having the given title and section title index
    
-    int idx = [[UILocalizedIndexedCollation currentCollation]
-sectionForSectionIndexTitleAtIndex:index];
-    for (int i = 0; i < [apps count]; i++) {
-        if (idx <= [[UILocalizedIndexedCollation currentCollation] sectionForObject:[apps objectAtIndex:i] collationStringSelector:@selector(displayName)])
+    NSInteger idx = %orig;
+    NSInteger numApps = [apps applicationCount];
+    for (int i = 0; i < numApps; i++) {
+	UILocalizedIndexedCollation *collation = [UILocalizedIndexed currentCollation];
+	NSInteger nid = [collation sectionForObject:[apps 
+objectAtIndex:i] collationStringSelector:@selector(displayName)];
+        if (idx <= nid)
             return i;
     }
     return -1;
 }
 
-- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath*)indexPath
+/*- (void)tableView:(UITableView *)tableView 
+didSelectRowAtIndexPath:(NSIndexPath*)indexPath
 { //Tells the delegate what row is now selected
     %orig;
-}
+}*/
 
-%new(@@:@)
+//%new(@@:@)
 - (NSArray *)sectionIndexTitlesForTableView: (UITableView *)tableView {
     //return the titles for the sections for a table view
-    if ([self shouldGTFO]) {
+    BOOL gtfo = ![[[[self searchView] searchBar] text] isEqualToString:@""];
+    if (gtfo) {
         return nil;
     } else {
         id titles = [[UILocalizedIndexedCollation currentCollation] sectionIndexTitles];
@@ -105,7 +103,7 @@ sectionForSectionIndexTitleAtIndex:index];
     if (cell) {
         [cell clearContents];
     } else {
-        cell = [[[objc_getClass("SBSearchTableViewCell") alloc] initWithStyle:(UITableViewCellStyle)0 reuseIdentifier:@"dude"] autorelease];
+        cell = [[[objc_getClass("SBSearchTableViewCell") alloc] initWithStyle:(UITableViewCellStyle) reuseIdentifier:@"dude"] autorelease];
         MSHookIvar<float>(cell, "_sectionHeaderWidth") = sectionHeaderWidth;
         [cell setEdgeInset:0];
     }
@@ -117,7 +115,7 @@ sectionForSectionIndexTitleAtIndex:index];
     else [cell setFirstInTableView:NO];
 
     //[cell setTitle:[[apps objectAtIndex:s] displayName]];
-    [cell setTitle:[[dataSource displayIdentifierForIndexPath:indexPath] displayName]];
+    [cell setTitle:[[apps displayIdentifierForIndexPath:ip] displayName]];
     //[cell setAuxiliaryTitle:]; //It would be cool if it showed the last message etc; similiar to runninglist
     //[cell setSubtitle:]; //see above
     [cell setFirstInSection:YES];
