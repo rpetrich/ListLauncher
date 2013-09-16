@@ -1,5 +1,7 @@
 #import <UIKit/UIKit.h>
 #import <AppList.h> //Using AppList to generate list of apps
+#import <SBSearchTableViewCell.h>
+//#import <SBUIController.h>
 
 ALApplicationList *apps;
 ALApplicationTableDataSource *dataSource;
@@ -45,8 +47,13 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
 %end
 
 %hook SBSearchController
+
 %new(c@:)
-- (BOOL)shouldGTFO { return ![[[[self searchView] searchBar] text] isEqualToString:@""]; 
+- (BOOL)shouldGTFO { 
+    SBSearchView *sv;
+    object_getInstanceVariable(self, "_searchView", (void**)sv);
+    //Ivar object_getInstanceVariable(id obj, const char *name, void **outValue)
+    return ![[[sv searchBar] text] isEqualToString:@""]; 
     //UIView searchView = [[[objc_getClass("SBSearchController") sharedInstance] searchView] retain];
     //return ![[[[searchView searchBar] text] isEqualToStirng:@""];
     //return ![[[[objc_getClass("SBSearchController") sharedInstance] searchView] searchBar] text] isEqualToStirng:@""];
@@ -63,29 +70,19 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
     return searchRowHeight; 
 }
 
-//%new(i@:@i)
+%new(i@:@i)
 - (int)tableView: (UITableView *)tableView sectionForSectionIndexTitle: (NSString *)title atIndex: (NSInteger)index {
     // Asks the datasource to return the index for the section having the given title and section title index
    
-    int idx = %orig;
-    NSInteger numApps = [apps applicationCount];
-    for (int i = 0; i < numApps; i++) {
-	UILocalizedIndexedCollation *collation = [UILocalizedIndexedCollation currentCollation];
-    NSString *name = [dataSource displayIdentifierForIndexPath:i];
-	NSInteger nid = [collation sectionForObject:name collationStringSelector:@selector(displayName)];
-        if (idx <= nid)
-            return i;
+    int idx = [[UILocalizedIndexedCollation currentCollation] sectionForSectionIndexTitleAtIndex:index];
+    for (int i = 0; i < [apps applicationCount]; i++) {
+        NSIndexPath *path = [NSIndexPath indexPathWithIndex:i];
+        if (idx <= [[UILocalizedIndexedCollation currentCollation] sectionForObject:[dataSource displayIdentifierForIndexPath:path] collationStringSelector:@selector(displayName)]) return i;
     }
     return -1;
 }
 
-/*- (void)tableView:(UITableView *)tableView 
-didSelectRowAtIndexPath:(NSIndexPath*)indexPath
-{ //Tells the delegate what row is now selected
-    %orig;
-}*/
-
-//%new(@@:@)
+%new(@@:@)
 - (NSArray *)sectionIndexTitlesForTableView: (UITableView *)tableView {
     //return the titles for the sections for a table view
     if ([self shouldGTFO]) {
@@ -96,6 +93,7 @@ didSelectRowAtIndexPath:(NSIndexPath*)indexPath
         return titles;
     }
 }
+
 - (id)tableView: (id)tableView cellForRowAtIndexPath: (id)indexPath {
     // Asks the data source for a cell to insert in a particular 
     // location of the table view. (required)
@@ -107,24 +105,30 @@ didSelectRowAtIndexPath:(NSIndexPath*)indexPath
     if (cell) {
         [cell clearContents];
     } else {
-        cell = [[[objc_getClass("SBSearchTableViewCell") alloc] initWithStyle:(UITableViewCellStyle) reuseIdentifier:@"dude"] autorelease];
-        MSHookIvar<float>(cell, "_sectionHeaderWidth") = sectionHeaderWidth;
+        cell = [[[SBSearchTableViewCell alloc] initWithStyle:(UITableViewCellStyle) reuseIdentifier:@"dude"] autorelease];
+        object_setInstanceVariable(cell, "_sectionHeaderWidth", sectionHeaderWidth);
+        //MSHookIvar<float>(cell, "_sectionHeaderWidth") = sectionHeaderWidth;
         [cell setEdgeInset:0];
     }
 
     [cell setBadged:NO];
     [cell setBelowTopHit:YES];
     [cell setUsesAlternateBackgroundColor:NO];
-    if (s == 0) [cell setFirstInTableView:YES];
-    else [cell setFirstInTableView:NO];
+    if (s == 0) {
+        [cell setFirstInTableView:YES];
+    }
+    else {
+        [cell setFirstInTableView:NO];
+    }
 
-    //[cell setTitle:[[apps objectAtIndex:s] displayName]];
-    [cell setTitle:[[datasource displayIdentifierForIndexPath:indexPath] displayName]];
+    [cell setTitle:[[dataSource displayIdentifierForIndexPath:indexPath] description]];
     //[cell setAuxiliaryTitle:]; //It would be cool if it showed the last message etc; similiar to runninglist
     //[cell setSubtitle:]; //see above
     [cell setFirstInSection:YES];
 
-    [[[self searchView] tableView] setScrollEnabled:YES];
+    SBSearchView *sv;
+    object_getInstanceVariable(self, "_searchView", (void**)sv);
+    [[sv tableView] setScrollEnabled:YES];
     [cell setNeedsDisplay];
 
     return cell;
@@ -133,8 +137,11 @@ didSelectRowAtIndexPath:(NSIndexPath*)indexPath
     //This launches the app
     if ([self shouldGTFO]) { %orig; return; }
 
-    id app = [apps objectAtIndex:[indexPath section]];
+    id app = [dataSource displayIdentifierForIndexPath:indexPath];
+    //SBUIController *sv;
+    //object_getInstanceVariable(objc_getClass("SBUIController"), "_sharedInstance", (void**)sv);
     [[objc_getClass("SBUIController") sharedInstance] activateApplicationAnimated:app];
+    //[[SBUIController sharedInstance] activateApplicationAnimated:app];
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
 }
 
@@ -153,10 +160,12 @@ didSelectRowAtIndexPath:(NSIndexPath*)indexPath
     if ([self shouldGTFO]) return %orig;
 
     id v = [[UIView alloc] initWithFrame:CGRectMake(0, 0, sectionHeaderWidth, searchRowHeight)];
-    id m = [[[objc_getClass("SBIconModel") sharedInstance] applicationIconForDisplayIdentifier:[[apps objectAtIndex:s] displayIdentifier]] getIconImage:is_wildcat()];
-    id i = [[UIImageView alloc] initWithImage:m];
+    NSIndexPath *path = [NSIndexPath indexPathWithIndex:s];
+    //id m = [[[SBIconModel sharedInstance] applicationIconForDisplayIdentifier:[dataSource displayIdentifierForIndexPath:path]] getIconImage:is_wildcat()];
+    //id i = [[UIImageView alloc] initWithImage:m];
+    id i = [apps iconOfSize:ALApplicationIconSizeSmall forDisplayIdentifier:[dataSource displayIdentifierForIndexPath:path]];
     CGRect r = [i frame];
-    r.size = [m size];
+    r.size = [i size];
     CGSize size = [v frame].size;
     r.origin.y = (size.height - r.size.height) * 0.5f;
     r.origin.x = (size.width - r.size.width) * 0.5f;
