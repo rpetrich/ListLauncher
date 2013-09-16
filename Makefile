@@ -1,4 +1,4 @@
-include theos/makefiles/common.mk
+include /Users/zac/theos/makefiles/common.mk
 
 TWEAK_NAME = ListLauncher
 ListLauncher_FILES = Tweak.xm

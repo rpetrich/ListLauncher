@@ -2,21 +2,22 @@
 #import <UIKit/UIKit.h>
 #import <AppList.h> 
 
-ALApplicationTableDataSource *apps;
+ALApplicationList *apps;
+ALApplicationTableDataSource *dataSource;
 
-static id app_id = nil; 
 static UITableView *table = nil;
 static CGFloat sectionHeaderWidth;
 static CGFloat searchRowHeight;
 
-static inline BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] isWildcat]; }
+
+static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInterfaceIdiomPad); }
 
 #include <logos/logos.h>
 #include <substrate.h>
 @class SBApplicationController; @class SBSearchView; @class UITableView; @class SBSearchController; 
-static void (*_logos_orig$_ungrouped$UITableView$setAlpha$)(UITableView*, SEL, float); static void _logos_method$_ungrouped$UITableView$setAlpha$(UITableView*, SEL, float); static id (*_logos_orig$_ungrouped$SBSearchView$initWithFrame$withContent$onWallpaper$)(SBSearchView*, SEL, CGRect, id, id); static id _logos_method$_ungrouped$SBSearchView$initWithFrame$withContent$onWallpaper$(SBSearchView*, SEL, CGRect, id, id); static void (*_logos_orig$_ungrouped$SBApplicationController$loadApplications)(SBApplicationController*, SEL); static void _logos_method$_ungrouped$SBApplicationController$loadApplications(SBApplicationController*, SEL); static BOOL _logos_meta_method$_ungrouped$SBSearchController$shouldGTFO(Class, SEL); static BOOL (*_logos_orig$_ungrouped$SBSearchController$_hasSearchResults)(SBSearchController*, SEL); static BOOL _logos_method$_ungrouped$SBSearchController$_hasSearchResults(SBSearchController*, SEL); static BOOL (*_logos_orig$_ungrouped$SBSearchController$respondsToSelector$)(SBSearchController*, SEL, SEL); static BOOL _logos_method$_ungrouped$SBSearchController$respondsToSelector$(SBSearchController*, SEL, SEL); static float (*_logos_orig$_ungrouped$SBSearchController$tableView$heightForRowAtIndexPath$)(SBSearchController*, SEL, id, id); static float _logos_method$_ungrouped$SBSearchController$tableView$heightForRowAtIndexPath$(SBSearchController*, SEL, id, id); static int (*_logos_orig$_ungrouped$SBSearchController$tableView$sectionForSectionIndexTitle$atIndex$)(SBSearchController*, SEL, UITableView *, NSString *, NSInteger); static int _logos_method$_ungrouped$SBSearchController$tableView$sectionForSectionIndexTitle$atIndex$(SBSearchController*, SEL, UITableView *, NSString *, NSInteger); static NSArray * (*_logos_orig$_ungrouped$SBSearchController$sectionIndexTitlesForTableView$)(SBSearchController*, SEL, UITableView *); static NSArray * _logos_method$_ungrouped$SBSearchController$sectionIndexTitlesForTableView$(SBSearchController*, SEL, UITableView *); static id (*_logos_orig$_ungrouped$SBSearchController$tableView$cellForRowAtIndexPath$)(SBSearchController*, SEL, id, id); static id _logos_method$_ungrouped$SBSearchController$tableView$cellForRowAtIndexPath$(SBSearchController*, SEL, id, id); static void (*_logos_orig$_ungrouped$SBSearchController$tableView$didSelectRowAtIndexPath$)(SBSearchController*, SEL, id, id); static void _logos_method$_ungrouped$SBSearchController$tableView$didSelectRowAtIndexPath$(SBSearchController*, SEL, id, id); static int (*_logos_orig$_ungrouped$SBSearchController$tableView$numberOfRowsInSection$)(SBSearchController*, SEL, id, int); static int _logos_method$_ungrouped$SBSearchController$tableView$numberOfRowsInSection$(SBSearchController*, SEL, id, int); static int (*_logos_orig$_ungrouped$SBSearchController$numberOfSectionsInTableView$)(SBSearchController*, SEL, id); static int _logos_method$_ungrouped$SBSearchController$numberOfSectionsInTableView$(SBSearchController*, SEL, id); static id (*_logos_orig$_ungrouped$SBSearchController$tableView$viewForHeaderInSection$)(SBSearchController*, SEL, id, int); static id _logos_method$_ungrouped$SBSearchController$tableView$viewForHeaderInSection$(SBSearchController*, SEL, id, int); 
+static void (*_logos_orig$_ungrouped$UITableView$setAlpha$)(UITableView*, SEL, float); static void _logos_method$_ungrouped$UITableView$setAlpha$(UITableView*, SEL, float); static id (*_logos_orig$_ungrouped$SBSearchView$initWithFrame$withContent$onWallpaper$)(SBSearchView*, SEL, CGRect, id, id); static id _logos_method$_ungrouped$SBSearchView$initWithFrame$withContent$onWallpaper$(SBSearchView*, SEL, CGRect, id, id); static void (*_logos_orig$_ungrouped$SBApplicationController$loadApplications)(SBApplicationController*, SEL); static void _logos_method$_ungrouped$SBApplicationController$loadApplications(SBApplicationController*, SEL); static BOOL _logos_method$_ungrouped$SBSearchController$shouldGTFO(SBSearchController*, SEL); static BOOL (*_logos_orig$_ungrouped$SBSearchController$_hasSearchResults)(SBSearchController*, SEL); static BOOL _logos_method$_ungrouped$SBSearchController$_hasSearchResults(SBSearchController*, SEL); static BOOL (*_logos_orig$_ungrouped$SBSearchController$respondsToSelector$)(SBSearchController*, SEL, SEL); static BOOL _logos_method$_ungrouped$SBSearchController$respondsToSelector$(SBSearchController*, SEL, SEL); static float (*_logos_orig$_ungrouped$SBSearchController$tableView$heightForRowAtIndexPath$)(SBSearchController*, SEL, id, id); static float _logos_method$_ungrouped$SBSearchController$tableView$heightForRowAtIndexPath$(SBSearchController*, SEL, id, id); static int (*_logos_orig$_ungrouped$SBSearchController$tableView$sectionForSectionIndexTitle$atIndex$)(SBSearchController*, SEL, UITableView *, NSString *, NSInteger); static int _logos_method$_ungrouped$SBSearchController$tableView$sectionForSectionIndexTitle$atIndex$(SBSearchController*, SEL, UITableView *, NSString *, NSInteger); static NSArray * (*_logos_orig$_ungrouped$SBSearchController$sectionIndexTitlesForTableView$)(SBSearchController*, SEL, UITableView *); static NSArray * _logos_method$_ungrouped$SBSearchController$sectionIndexTitlesForTableView$(SBSearchController*, SEL, UITableView *); static id (*_logos_orig$_ungrouped$SBSearchController$tableView$cellForRowAtIndexPath$)(SBSearchController*, SEL, id, id); static id _logos_method$_ungrouped$SBSearchController$tableView$cellForRowAtIndexPath$(SBSearchController*, SEL, id, id); static void (*_logos_orig$_ungrouped$SBSearchController$tableView$didSelectRowAtIndexPath$)(SBSearchController*, SEL, id, id); static void _logos_method$_ungrouped$SBSearchController$tableView$didSelectRowAtIndexPath$(SBSearchController*, SEL, id, id); static int (*_logos_orig$_ungrouped$SBSearchController$tableView$numberOfRowsInSection$)(SBSearchController*, SEL, id, int); static int _logos_method$_ungrouped$SBSearchController$tableView$numberOfRowsInSection$(SBSearchController*, SEL, id, int); static int (*_logos_orig$_ungrouped$SBSearchController$numberOfSectionsInTableView$)(SBSearchController*, SEL, id); static int _logos_method$_ungrouped$SBSearchController$numberOfSectionsInTableView$(SBSearchController*, SEL, id); static id (*_logos_orig$_ungrouped$SBSearchController$tableView$viewForHeaderInSection$)(SBSearchController*, SEL, id, int); static id _logos_method$_ungrouped$SBSearchController$tableView$viewForHeaderInSection$(SBSearchController*, SEL, id, int); 
 
-#line 13 "Tweak.xm"
+#line 14 "Tweak.xm"
 
 static void _logos_method$_ungrouped$UITableView$setAlpha$(UITableView* self, SEL _cmd, float alpha) { 
     if (self != table) 
@@ -43,15 +44,19 @@ static void _logos_method$_ungrouped$SBApplicationController$loadApplications(SB
     _logos_orig$_ungrouped$SBApplicationController$loadApplications(self, _cmd);
 
     apps = [ALApplicationList sharedApplicationList];
+    dataSource = [[ALApplicationTableDataSource alloc] init];
+    dataSource.sectionDescriptors = [ALApplicationTableDataSource standardSectionDescriptors];
     
-    apps.sectionDescriptors = [ALApplicationTableDataSource standardSectionDescriptors];
     
 }
 
 
 
 
-static BOOL _logos_meta_method$_ungrouped$SBSearchController$shouldGTFO(Class self, SEL _cmd) { return ![[[[self searchView] searchBar] text] isEqualToString:@""]; 
+static BOOL _logos_method$_ungrouped$SBSearchController$shouldGTFO(SBSearchController* self, SEL _cmd) { return ![[[[self searchView] searchBar] text] isEqualToString:@""]; 
+    
+    
+    
 }
 
 
@@ -69,12 +74,12 @@ static float _logos_method$_ungrouped$SBSearchController$tableView$heightForRowA
 static int _logos_method$_ungrouped$SBSearchController$tableView$sectionForSectionIndexTitle$atIndex$(SBSearchController* self, SEL _cmd, UITableView * tableView, NSString * title, NSInteger index) {
     
    
-    NSInteger idx = _logos_orig$_ungrouped$SBSearchController$tableView$sectionForSectionIndexTitle$atIndex$(self, _cmd, tableView, title, index);
+    int idx = _logos_orig$_ungrouped$SBSearchController$tableView$sectionForSectionIndexTitle$atIndex$(self, _cmd, tableView, title, index);
     NSInteger numApps = [apps applicationCount];
     for (int i = 0; i < numApps; i++) {
-	UILocalizedIndexedCollation *collation = [UILocalizedIndexed currentCollation];
-	NSInteger nid = [collation sectionForObject:[apps 
-objectAtIndex:i] collationStringSelector:@selector(displayName)];
+	UILocalizedIndexedCollation *collation = [UILocalizedIndexedCollation currentCollation];
+    NSString *name = [dataSource displayIdentifierForIndexPath:i];
+	NSInteger nid = [collation sectionForObject:name collationStringSelector:@selector(displayName)];
         if (idx <= nid)
             return i;
     }
@@ -90,8 +95,7 @@ objectAtIndex:i] collationStringSelector:@selector(displayName)];
 
 static NSArray * _logos_method$_ungrouped$SBSearchController$sectionIndexTitlesForTableView$(SBSearchController* self, SEL _cmd, UITableView * tableView) {
     
-    BOOL gtfo = ![[[[self searchView] searchBar] text] isEqualToString:@""];
-    if (gtfo) {
+    if ([self shouldGTFO]) {
         return nil;
     } else {
         id titles = [[UILocalizedIndexedCollation currentCollation] sectionIndexTitles];
@@ -99,14 +103,14 @@ static NSArray * _logos_method$_ungrouped$SBSearchController$sectionIndexTitlesF
         return titles;
     }
 }
-static id _logos_method$_ungrouped$SBSearchController$tableView$cellForRowAtIndexPath$(SBSearchController* self, SEL _cmd, id tv, id ip) {
+static id _logos_method$_ungrouped$SBSearchController$tableView$cellForRowAtIndexPath$(SBSearchController* self, SEL _cmd, id tableView, id indexPath) {
     
     
-    if ([self shouldGTFO]) return _logos_orig$_ungrouped$SBSearchController$tableView$cellForRowAtIndexPath$(self, _cmd, tv, ip);
+    if ([self shouldGTFO]) return _logos_orig$_ungrouped$SBSearchController$tableView$cellForRowAtIndexPath$(self, _cmd, tableView, indexPath);
 
-    int s = [ip section];
+    int s = [indexPath section];
 
-    id cell = [tv dequeueReusableCellWithIdentifier:@"dude"];
+    id cell = [tableView dequeueReusableCellWithIdentifier:@"dude"];
     if (cell) {
         [cell clearContents];
     } else {
@@ -118,11 +122,11 @@ static id _logos_method$_ungrouped$SBSearchController$tableView$cellForRowAtInde
     [cell setBadged:NO];
     [cell setBelowTopHit:YES];
     [cell setUsesAlternateBackgroundColor:NO];
-    if ([ip section] == 0) [cell setFirstInTableView:YES];
+    if (s == 0) [cell setFirstInTableView:YES];
     else [cell setFirstInTableView:NO];
 
     
-    [cell setTitle:[[apps displayIdentifierForIndexPath:ip] displayName]];
+    [cell setTitle:[[datasource displayIdentifierForIndexPath:indexPath] displayName]];
     
     
     [cell setFirstInSection:YES];
@@ -132,22 +136,22 @@ static id _logos_method$_ungrouped$SBSearchController$tableView$cellForRowAtInde
 
     return cell;
 }
-static void _logos_method$_ungrouped$SBSearchController$tableView$didSelectRowAtIndexPath$(SBSearchController* self, SEL _cmd, id tv, id ip) {
+static void _logos_method$_ungrouped$SBSearchController$tableView$didSelectRowAtIndexPath$(SBSearchController* self, SEL _cmd, id tableView, id indexPath) {
     
-    if ([self shouldGTFO]) { _logos_orig$_ungrouped$SBSearchController$tableView$didSelectRowAtIndexPath$(self, _cmd, tv, ip); return; }
+    if ([self shouldGTFO]) { _logos_orig$_ungrouped$SBSearchController$tableView$didSelectRowAtIndexPath$(self, _cmd, tableView, indexPath); return; }
 
-    id a = [apps objectAtIndex:[ip section]];
-    [[objc_getClass("SBUIController") sharedInstance] activateApplicationAnimated:a];
-    [tv deselectRowAtIndexPath:ip animated:YES];
+    id app = [apps objectAtIndex:[indexPath section]];
+    [[objc_getClass("SBUIController") sharedInstance] activateApplicationAnimated:app];
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
 }
 
-static int _logos_method$_ungrouped$SBSearchController$tableView$numberOfRowsInSection$(SBSearchController* self, SEL _cmd, id tv, int s) {
-    if ([self shouldGTFO]) return _logos_orig$_ungrouped$SBSearchController$tableView$numberOfRowsInSection$(self, _cmd, tv, s);
+static int _logos_method$_ungrouped$SBSearchController$tableView$numberOfRowsInSection$(SBSearchController* self, SEL _cmd, id tableView, int s) {
+    if ([self shouldGTFO]) return _logos_orig$_ungrouped$SBSearchController$tableView$numberOfRowsInSection$(self, _cmd, tableView, s);
     else return 1;
 }
-static int _logos_method$_ungrouped$SBSearchController$numberOfSectionsInTableView$(SBSearchController* self, SEL _cmd, id tv) {
-    if ([self shouldGTFO]) return _logos_orig$_ungrouped$SBSearchController$numberOfSectionsInTableView$(self, _cmd, tv);
-    return [apps count];
+static int _logos_method$_ungrouped$SBSearchController$numberOfSectionsInTableView$(SBSearchController* self, SEL _cmd, id tableView) {
+    if ([self shouldGTFO]) return _logos_orig$_ungrouped$SBSearchController$numberOfSectionsInTableView$(self, _cmd, tableView);
+    return [apps applicationCount];
 }
 static id _logos_method$_ungrouped$SBSearchController$tableView$viewForHeaderInSection$(SBSearchController* self, SEL _cmd, id tv, int s) {
     
@@ -173,5 +177,5 @@ static id _logos_method$_ungrouped$SBSearchController$tableView$viewForHeaderInS
 }
 
 static __attribute__((constructor)) void _logosLocalInit() {
-{Class _logos_class$_ungrouped$UITableView = objc_getClass("UITableView"); MSHookMessageEx(_logos_class$_ungrouped$UITableView, @selector(setAlpha:), (IMP)&_logos_method$_ungrouped$UITableView$setAlpha$, (IMP*)&_logos_orig$_ungrouped$UITableView$setAlpha$);Class _logos_class$_ungrouped$SBSearchView = objc_getClass("SBSearchView"); MSHookMessageEx(_logos_class$_ungrouped$SBSearchView, @selector(initWithFrame:withContent:onWallpaper:), (IMP)&_logos_method$_ungrouped$SBSearchView$initWithFrame$withContent$onWallpaper$, (IMP*)&_logos_orig$_ungrouped$SBSearchView$initWithFrame$withContent$onWallpaper$);Class _logos_class$_ungrouped$SBApplicationController = objc_getClass("SBApplicationController"); MSHookMessageEx(_logos_class$_ungrouped$SBApplicationController, @selector(loadApplications), (IMP)&_logos_method$_ungrouped$SBApplicationController$loadApplications, (IMP*)&_logos_orig$_ungrouped$SBApplicationController$loadApplications);Class _logos_class$_ungrouped$SBSearchController = objc_getClass("SBSearchController"); Class _logos_metaclass$_ungrouped$SBSearchController = object_getClass(_logos_class$_ungrouped$SBSearchController); { const char *_typeEncoding = "c@:"; class_addMethod(_logos_metaclass$_ungrouped$SBSearchController, @selector(shouldGTFO), (IMP)&_logos_meta_method$_ungrouped$SBSearchController$shouldGTFO, _typeEncoding); }MSHookMessageEx(_logos_class$_ungrouped$SBSearchController, @selector(_hasSearchResults), (IMP)&_logos_method$_ungrouped$SBSearchController$_hasSearchResults, (IMP*)&_logos_orig$_ungrouped$SBSearchController$_hasSearchResults);MSHookMessageEx(_logos_class$_ungrouped$SBSearchController, @selector(respondsToSelector:), (IMP)&_logos_method$_ungrouped$SBSearchController$respondsToSelector$, (IMP*)&_logos_orig$_ungrouped$SBSearchController$respondsToSelector$);MSHookMessageEx(_logos_class$_ungrouped$SBSearchController, @selector(tableView:heightForRowAtIndexPath:), (IMP)&_logos_method$_ungrouped$SBSearchController$tableView$heightForRowAtIndexPath$, (IMP*)&_logos_orig$_ungrouped$SBSearchController$tableView$heightForRowAtIndexPath$);MSHookMessageEx(_logos_class$_ungrouped$SBSearchController, @selector(tableView:sectionForSectionIndexTitle:atIndex:), (IMP)&_logos_method$_ungrouped$SBSearchController$tableView$sectionForSectionIndexTitle$atIndex$, (IMP*)&_logos_orig$_ungrouped$SBSearchController$tableView$sectionForSectionIndexTitle$atIndex$);MSHookMessageEx(_logos_class$_ungrouped$SBSearchController, @selector(sectionIndexTitlesForTableView:), (IMP)&_logos_method$_ungrouped$SBSearchController$sectionIndexTitlesForTableView$, (IMP*)&_logos_orig$_ungrouped$SBSearchController$sectionIndexTitlesForTableView$);MSHookMessageEx(_logos_class$_ungrouped$SBSearchController, @selector(tableView:cellForRowAtIndexPath:), (IMP)&_logos_method$_ungrouped$SBSearchController$tableView$cellForRowAtIndexPath$, (IMP*)&_logos_orig$_ungrouped$SBSearchController$tableView$cellForRowAtIndexPath$);MSHookMessageEx(_logos_class$_ungrouped$SBSearchController, @selector(tableView:didSelectRowAtIndexPath:), (IMP)&_logos_method$_ungrouped$SBSearchController$tableView$didSelectRowAtIndexPath$, (IMP*)&_logos_orig$_ungrouped$SBSearchController$tableView$didSelectRowAtIndexPath$);MSHookMessageEx(_logos_class$_ungrouped$SBSearchController, @selector(tableView:numberOfRowsInSection:), (IMP)&_logos_method$_ungrouped$SBSearchController$tableView$numberOfRowsInSection$, (IMP*)&_logos_orig$_ungrouped$SBSearchController$tableView$numberOfRowsInSection$);MSHookMessageEx(_logos_class$_ungrouped$SBSearchController, @selector(numberOfSectionsInTableView:), (IMP)&_logos_method$_ungrouped$SBSearchController$numberOfSectionsInTableView$, (IMP*)&_logos_orig$_ungrouped$SBSearchController$numberOfSectionsInTableView$);MSHookMessageEx(_logos_class$_ungrouped$SBSearchController, @selector(tableView:viewForHeaderInSection:), (IMP)&_logos_method$_ungrouped$SBSearchController$tableView$viewForHeaderInSection$, (IMP*)&_logos_orig$_ungrouped$SBSearchController$tableView$viewForHeaderInSection$);} }
-#line 168 "Tweak.xm"
+{Class _logos_class$_ungrouped$UITableView = objc_getClass("UITableView"); MSHookMessageEx(_logos_class$_ungrouped$UITableView, @selector(setAlpha:), (IMP)&_logos_method$_ungrouped$UITableView$setAlpha$, (IMP*)&_logos_orig$_ungrouped$UITableView$setAlpha$);Class _logos_class$_ungrouped$SBSearchView = objc_getClass("SBSearchView"); MSHookMessageEx(_logos_class$_ungrouped$SBSearchView, @selector(initWithFrame:withContent:onWallpaper:), (IMP)&_logos_method$_ungrouped$SBSearchView$initWithFrame$withContent$onWallpaper$, (IMP*)&_logos_orig$_ungrouped$SBSearchView$initWithFrame$withContent$onWallpaper$);Class _logos_class$_ungrouped$SBApplicationController = objc_getClass("SBApplicationController"); MSHookMessageEx(_logos_class$_ungrouped$SBApplicationController, @selector(loadApplications), (IMP)&_logos_method$_ungrouped$SBApplicationController$loadApplications, (IMP*)&_logos_orig$_ungrouped$SBApplicationController$loadApplications);Class _logos_class$_ungrouped$SBSearchController = objc_getClass("SBSearchController"); { const char *_typeEncoding = "c@:"; class_addMethod(_logos_class$_ungrouped$SBSearchController, @selector(shouldGTFO), (IMP)&_logos_method$_ungrouped$SBSearchController$shouldGTFO, _typeEncoding); }MSHookMessageEx(_logos_class$_ungrouped$SBSearchController, @selector(_hasSearchResults), (IMP)&_logos_method$_ungrouped$SBSearchController$_hasSearchResults, (IMP*)&_logos_orig$_ungrouped$SBSearchController$_hasSearchResults);MSHookMessageEx(_logos_class$_ungrouped$SBSearchController, @selector(respondsToSelector:), (IMP)&_logos_method$_ungrouped$SBSearchController$respondsToSelector$, (IMP*)&_logos_orig$_ungrouped$SBSearchController$respondsToSelector$);MSHookMessageEx(_logos_class$_ungrouped$SBSearchController, @selector(tableView:heightForRowAtIndexPath:), (IMP)&_logos_method$_ungrouped$SBSearchController$tableView$heightForRowAtIndexPath$, (IMP*)&_logos_orig$_ungrouped$SBSearchController$tableView$heightForRowAtIndexPath$);MSHookMessageEx(_logos_class$_ungrouped$SBSearchController, @selector(tableView:sectionForSectionIndexTitle:atIndex:), (IMP)&_logos_method$_ungrouped$SBSearchController$tableView$sectionForSectionIndexTitle$atIndex$, (IMP*)&_logos_orig$_ungrouped$SBSearchController$tableView$sectionForSectionIndexTitle$atIndex$);MSHookMessageEx(_logos_class$_ungrouped$SBSearchController, @selector(sectionIndexTitlesForTableView:), (IMP)&_logos_method$_ungrouped$SBSearchController$sectionIndexTitlesForTableView$, (IMP*)&_logos_orig$_ungrouped$SBSearchController$sectionIndexTitlesForTableView$);MSHookMessageEx(_logos_class$_ungrouped$SBSearchController, @selector(tableView:cellForRowAtIndexPath:), (IMP)&_logos_method$_ungrouped$SBSearchController$tableView$cellForRowAtIndexPath$, (IMP*)&_logos_orig$_ungrouped$SBSearchController$tableView$cellForRowAtIndexPath$);MSHookMessageEx(_logos_class$_ungrouped$SBSearchController, @selector(tableView:didSelectRowAtIndexPath:), (IMP)&_logos_method$_ungrouped$SBSearchController$tableView$didSelectRowAtIndexPath$, (IMP*)&_logos_orig$_ungrouped$SBSearchController$tableView$didSelectRowAtIndexPath$);MSHookMessageEx(_logos_class$_ungrouped$SBSearchController, @selector(tableView:numberOfRowsInSection:), (IMP)&_logos_method$_ungrouped$SBSearchController$tableView$numberOfRowsInSection$, (IMP*)&_logos_orig$_ungrouped$SBSearchController$tableView$numberOfRowsInSection$);MSHookMessageEx(_logos_class$_ungrouped$SBSearchController, @selector(numberOfSectionsInTableView:), (IMP)&_logos_method$_ungrouped$SBSearchController$numberOfSectionsInTableView$, (IMP*)&_logos_orig$_ungrouped$SBSearchController$numberOfSectionsInTableView$);MSHookMessageEx(_logos_class$_ungrouped$SBSearchController, @selector(tableView:viewForHeaderInSection:), (IMP)&_logos_method$_ungrouped$SBSearchController$tableView$viewForHeaderInSection$, (IMP*)&_logos_orig$_ungrouped$SBSearchController$tableView$viewForHeaderInSection$);} }
+#line 172 "Tweak.xm"

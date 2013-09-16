@@ -1,14 +1,15 @@
 #import <UIKit/UIKit.h>
 #import <AppList.h> //Using AppList to generate list of apps
 
-ALApplicationTableDataSource *apps;
+ALApplicationList *apps;
+ALApplicationTableDataSource *dataSource;
 
-static id app_id = nil; 
 static UITableView *table = nil;
 static CGFloat sectionHeaderWidth;
 static CGFloat searchRowHeight;
 
-static inline BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] isWildcat]; }
+// wildcat = iPad
+static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInterfaceIdiomPad); }
 
 %hook UITableView
 - (void)setAlpha:(float)alpha { 
@@ -36,15 +37,19 @@ static inline BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] is
     %orig;
 
     apps = [ALApplicationList sharedApplicationList];
+    dataSource = [[ALApplicationTableDataSource alloc] init];
+    dataSource.sectionDescriptors = [ALApplicationTableDataSource standardSectionDescriptors];
     //apps = [[ALApplicationTableDataSouce alloc] init];
-    apps.sectionDescriptors = [ALApplicationTableDataSource standardSectionDescriptors];
-    
+    //apps.sectionDescriptors = [ALApplicationTableDataSource standardSectionDescriptors];
 }
 %end
 
 %hook SBSearchController
 %new(c@:)
-+ (BOOL)shouldGTFO { return ![[[[self searchView] searchBar] text] isEqualToString:@""]; 
+- (BOOL)shouldGTFO { return ![[[[self searchView] searchBar] text] isEqualToString:@""]; 
+    //UIView searchView = [[[objc_getClass("SBSearchController") sharedInstance] searchView] retain];
+    //return ![[[[searchView searchBar] text] isEqualToStirng:@""];
+    //return ![[[[objc_getClass("SBSearchController") sharedInstance] searchView] searchBar] text] isEqualToStirng:@""];
 }
 //returns false when there is no search term
 
@@ -62,12 +67,12 @@ static inline BOOL is_wildcat() { return (BOOL)(int)[[UIDevice currentDevice] is
 - (int)tableView: (UITableView *)tableView sectionForSectionIndexTitle: (NSString *)title atIndex: (NSInteger)index {
     // Asks the datasource to return the index for the section having the given title and section title index
    
-    NSInteger idx = %orig;
+    int idx = %orig;
     NSInteger numApps = [apps applicationCount];
     for (int i = 0; i < numApps; i++) {
-	UILocalizedIndexedCollation *collation = [UILocalizedIndexed currentCollation];
-	NSInteger nid = [collation sectionForObject:[apps 
-objectAtIndex:i] collationStringSelector:@selector(displayName)];
+	UILocalizedIndexedCollation *collation = [UILocalizedIndexedCollation currentCollation];
+    NSString *name = [dataSource displayIdentifierForIndexPath:i];
+	NSInteger nid = [collation sectionForObject:name collationStringSelector:@selector(displayName)];
         if (idx <= nid)
             return i;
     }
@@ -83,8 +88,7 @@ didSelectRowAtIndexPath:(NSIndexPath*)indexPath
 //%new(@@:@)
 - (NSArray *)sectionIndexTitlesForTableView: (UITableView *)tableView {
     //return the titles for the sections for a table view
-    BOOL gtfo = ![[[[self searchView] searchBar] text] isEqualToString:@""];
-    if (gtfo) {
+    if ([self shouldGTFO]) {
         return nil;
     } else {
         id titles = [[UILocalizedIndexedCollation currentCollation] sectionIndexTitles];
@@ -92,14 +96,14 @@ didSelectRowAtIndexPath:(NSIndexPath*)indexPath
         return titles;
     }
 }
-- (id)tableView: (id)tv cellForRowAtIndexPath: (id)ip {
+- (id)tableView: (id)tableView cellForRowAtIndexPath: (id)indexPath {
     // Asks the data source for a cell to insert in a particular 
     // location of the table view. (required)
     if ([self shouldGTFO]) return %orig;
 
-    int s = [ip section];
+    int s = [indexPath section];
 
-    id cell = [tv dequeueReusableCellWithIdentifier:@"dude"];
+    id cell = [tableView dequeueReusableCellWithIdentifier:@"dude"];
     if (cell) {
         [cell clearContents];
     } else {
@@ -111,11 +115,11 @@ didSelectRowAtIndexPath:(NSIndexPath*)indexPath
     [cell setBadged:NO];
     [cell setBelowTopHit:YES];
     [cell setUsesAlternateBackgroundColor:NO];
-    if ([ip section] == 0) [cell setFirstInTableView:YES];
+    if (s == 0) [cell setFirstInTableView:YES];
     else [cell setFirstInTableView:NO];
 
     //[cell setTitle:[[apps objectAtIndex:s] displayName]];
-    [cell setTitle:[[apps displayIdentifierForIndexPath:ip] displayName]];
+    [cell setTitle:[[datasource displayIdentifierForIndexPath:indexPath] displayName]];
     //[cell setAuxiliaryTitle:]; //It would be cool if it showed the last message etc; similiar to runninglist
     //[cell setSubtitle:]; //see above
     [cell setFirstInSection:YES];
@@ -125,22 +129,22 @@ didSelectRowAtIndexPath:(NSIndexPath*)indexPath
 
     return cell;
 }
-- (void)tableView: (id)tv didSelectRowAtIndexPath: (id)ip {
+- (void)tableView: (id)tableView didSelectRowAtIndexPath: (id)indexPath {
     //This launches the app
     if ([self shouldGTFO]) { %orig; return; }
 
-    id a = [apps objectAtIndex:[ip section]];
-    [[objc_getClass("SBUIController") sharedInstance] activateApplicationAnimated:a];
-    [tv deselectRowAtIndexPath:ip animated:YES];
+    id app = [apps objectAtIndex:[indexPath section]];
+    [[objc_getClass("SBUIController") sharedInstance] activateApplicationAnimated:app];
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
 }
 
-- (int)tableView: (id)tv numberOfRowsInSection: (int)s {
+- (int)tableView: (id)tableView numberOfRowsInSection: (int)s {
     if ([self shouldGTFO]) return %orig;
     else return 1;
 }
-- (int)numberOfSectionsInTableView: (id)tv {
+- (int)numberOfSectionsInTableView: (id)tableView {
     if ([self shouldGTFO]) return %orig;
-    return [apps count];
+    return [apps applicationCount];
 }
 - (id)tableView: (id)tv viewForHeaderInSection: (int)s {
     //Asks the delegate for a view object to display in the 
