@@ -6,46 +6,20 @@
  */
 
 #import <Foundation/NSObject.h>
+#import <SBApplication.h>
 
 
 @class UIView, SBZoomView, UIWindow, SBWallpaperView;
 
 @interface SBUIController : NSObject 
+
 {
-	UIWindow* _window;
-	UIView* _iconsView;
-	UIView* _buttonBarContainerView;
-	UIView* _contentView;
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_3_2
-	SBWallpaperView* _wallpaperView;
-#endif
-	SBZoomView* _zoomLayer;
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_3_2
-	UIView* _scatterFadeView;
-#endif
-	id _volumeHandler;
-	BOOL _restoringIconList;
-	BOOL _lastVolumeDownToControl;
-	BOOL _shouldAutoLock;
-	float _batteryCapacity;
-	float _curvedBatteryCapacity;
-	BOOL _isBatteryCharging;
-	BOOL _isOnAC;
-	BOOL _connectedToUnusableFirewire;
-	int _batteryLoggingStartCapacity;
-	unsigned char _headsetBatteryCapacity;
-	BOOL _isHeadsetCharging;
-	BOOL _isHeadsetDocked;
-	BOOL _ignoreHeadsetEvents;
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_3_2
-	int _orientation;
-#endif
+
 }
 +(int)displayedLevelForLockScreenBatteryLevel:(int)lockScreenBatteryLevel;
 +(SBUIController *)sharedInstance;
 -(void)_indicateConnectedToPower;
-// inherited: -(void)dealloc;
-// inherited: -(id)init;
+
 -(void)animateAppleDown:(BOOL)animated;	// Zoom out the Apple logo.
 -(BOOL)launchedAfterLanguageRestart;
 -(void)clearLaunchedAfterLanguageRestart;
@@ -59,13 +33,18 @@
 -(UIView *)contentView;
 -(UIWindow *)window;
 
-
+-(void)activateApplicationAnimated:(SBApplication*)application;
+-(void)showZoomLayerWithDefaultImageOfApp:(SBApplication *)app;
+-(void)showZoomLayerWithIOSurfaceSnapshotOfApp:(SBApplication *)app includeStatusWindow:(id)window;
 -(void)scatterIconListAndBar:(BOOL)animated;
 -(void)insertAndOrderIconListsForReordering:(BOOL)reordering;
 -(void)animateApplicationActivation:(id)activation animateDefaultImage:(BOOL)image scatterIcons:(BOOL)icons;
 -(void)animateApplicationActivationDidStop:(id)animateApplicationActivation finished:(id)finished context:(void*)context;
 -(void)tearDownIconListAndBar;
-
+-(void)animateApplicationSuspend:(SBApplication*)suspend;	// Zoom out and suspend the app
+-(void)applicationSuspendAnimationDidStop:(SBApplication *)applicationSuspendAnimation finished:(id)finished context:(void*)context;
+-(void)animateApplicationSuspendFlip:(id)flip;
+-(void)applicationSuspendFlipDidStop:(SBApplication *)applicationSuspendFlip;
 -(void)stopRestoringIconList;
 -(void)finishedFadingInButtonBar;
 -(BOOL)clickedMenuButton;
@@ -87,13 +66,14 @@
 -(unsigned char)headsetBatteryCapacity;
 
 
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_3_2
+
 -(void)lock:(BOOL)lock disableLockSound:(BOOL)sound;
 -(void)setShouldRasterizeAndFreezeContentView:(BOOL)rasterizeAndFreezeContentView;
 -(void)_updateWallpaperImage;
 -(SBWallpaperView *)wallpaperView;
 -(BOOL)isDisplayingWallpaper;
 -(void)setWallpaperAlpha:(CGFloat)alpha;
+-(void)_setRoundedCornersOnZoomLayerIfNecessaryForApp:(SBApplication *)app withCornersFrame:(CGRect)cornersFrame;
 -(void)fadeIconsForScatter:(BOOL)scatter duration:(NSTimeInterval)duration startTime:(double)time;
 -(void)restoreIconListAnimated:(BOOL)animated;
 -(void)restoreIconListAnimated:(BOOL)animated animateWallpaper:(BOOL)wallpaper;
@@ -110,9 +90,8 @@
 // in a protocol: -(void)window:(id)window willRotateToInterfaceOrientation:(int)interfaceOrientation duration:(NSTimeInterval)duration;
 // in a protocol: -(void)window:(id)window willAnimateRotationToInterfaceOrientation:(int)interfaceOrientation duration:(NSTimeInterval)duration;
 // in a protocol: -(void)window:(id)window didRotateFromInterfaceOrientation:(int)interfaceOrientation;
-#else
+
 -(void)restoreIconList:(BOOL)animated;
 -(void)showButtonBar:(BOOL)bar animate:(BOOL)animate action:(SEL)action delegate:(id)delegate;
-#endif
-@end
 
+@end

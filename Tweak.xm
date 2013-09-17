@@ -1,6 +1,7 @@
 #import <UIKit/UIKit.h>
 #import <AppList.h> //Using AppList to generate list of apps
 #import <SBSearchTableViewCell.h>
+#import <SBUIController.h>
 
 ALApplicationList *apps;
 ALApplicationTableDataSource *dataSource;
@@ -104,10 +105,10 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
     if (cell) {
         [cell clearContents];
     } else {
-        cell = [[[SBSearchTableViewCell alloc] initWithStyle:(UITableViewCellStyle) reuseIdentifier:@"dude"] autorelease];
+        cell = [[[SBSearchTableViewCell alloc] initWithStyle:(UITableViewCellStyleDefault) reuseIdentifier:@"dude"] autorelease]; //Actually need a style
         float f = sectionHeaderWidth;
         //void *fin = dynamic_cast<float *>(sectionHeaderWidth);
-        object_setInstanceVariable(cell, "_sectionHeaderWidth", f);
+        object_setInstanceVariable(cell, "_sectionHeaderWidth", f); //setInstanceVariable doesn't work on floats
         //MSHookIvar<float>(cell, "_sectionHeaderWidth") = sectionHeaderWidth;
         [cell setEdgeInset:0];
     }
