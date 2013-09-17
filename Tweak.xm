@@ -1,7 +1,6 @@
 #import <UIKit/UIKit.h>
 #import <AppList.h> //Using AppList to generate list of apps
 #import <SBSearchTableViewCell.h>
-//#import <SBUIController.h>
 
 ALApplicationList *apps;
 ALApplicationTableDataSource *dataSource;
@@ -49,7 +48,7 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
 %hook SBSearchController
 
 %new(c@:)
-- (BOOL)shouldGTFO { 
+-(BOOL)shouldGTFO { 
     SBSearchView *sv;
     object_getInstanceVariable(self, "_searchView", (void**)sv);
     //Ivar object_getInstanceVariable(id obj, const char *name, void **outValue)
@@ -106,7 +105,9 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
         [cell clearContents];
     } else {
         cell = [[[SBSearchTableViewCell alloc] initWithStyle:(UITableViewCellStyle) reuseIdentifier:@"dude"] autorelease];
-        object_setInstanceVariable(cell, "_sectionHeaderWidth", sectionHeaderWidth);
+        float f = sectionHeaderWidth;
+        //void *fin = dynamic_cast<float *>(sectionHeaderWidth);
+        object_setInstanceVariable(cell, "_sectionHeaderWidth", f);
         //MSHookIvar<float>(cell, "_sectionHeaderWidth") = sectionHeaderWidth;
         [cell setEdgeInset:0];
     }
