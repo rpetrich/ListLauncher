@@ -3,6 +3,7 @@
 #import <AppList.h> 
 #import <SBSearchTableViewCell.h>
 #import <SBUIController.h>
+#import <substrate.h>
 
 ALApplicationList *apps;
 ALApplicationTableDataSource *dataSource;
@@ -19,7 +20,7 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
 @class SBApplicationController; @class SBSearchView; @class UITableView; @class SBSearchController; 
 static void (*_logos_orig$_ungrouped$UITableView$setAlpha$)(UITableView*, SEL, float); static void _logos_method$_ungrouped$UITableView$setAlpha$(UITableView*, SEL, float); static id (*_logos_orig$_ungrouped$SBSearchView$initWithFrame$withContent$onWallpaper$)(SBSearchView*, SEL, CGRect, id, id); static id _logos_method$_ungrouped$SBSearchView$initWithFrame$withContent$onWallpaper$(SBSearchView*, SEL, CGRect, id, id); static void (*_logos_orig$_ungrouped$SBApplicationController$loadApplications)(SBApplicationController*, SEL); static void _logos_method$_ungrouped$SBApplicationController$loadApplications(SBApplicationController*, SEL); static BOOL _logos_method$_ungrouped$SBSearchController$shouldGTFO(SBSearchController*, SEL); static BOOL (*_logos_orig$_ungrouped$SBSearchController$_hasSearchResults)(SBSearchController*, SEL); static BOOL _logos_method$_ungrouped$SBSearchController$_hasSearchResults(SBSearchController*, SEL); static BOOL (*_logos_orig$_ungrouped$SBSearchController$respondsToSelector$)(SBSearchController*, SEL, SEL); static BOOL _logos_method$_ungrouped$SBSearchController$respondsToSelector$(SBSearchController*, SEL, SEL); static float (*_logos_orig$_ungrouped$SBSearchController$tableView$heightForRowAtIndexPath$)(SBSearchController*, SEL, id, id); static float _logos_method$_ungrouped$SBSearchController$tableView$heightForRowAtIndexPath$(SBSearchController*, SEL, id, id); static int _logos_method$_ungrouped$SBSearchController$tableView$sectionForSectionIndexTitle$atIndex$(SBSearchController*, SEL, UITableView *, NSString *, NSInteger); static NSArray * _logos_method$_ungrouped$SBSearchController$sectionIndexTitlesForTableView$(SBSearchController*, SEL, UITableView *); static id (*_logos_orig$_ungrouped$SBSearchController$tableView$cellForRowAtIndexPath$)(SBSearchController*, SEL, id, id); static id _logos_method$_ungrouped$SBSearchController$tableView$cellForRowAtIndexPath$(SBSearchController*, SEL, id, id); static void (*_logos_orig$_ungrouped$SBSearchController$tableView$didSelectRowAtIndexPath$)(SBSearchController*, SEL, id, id); static void _logos_method$_ungrouped$SBSearchController$tableView$didSelectRowAtIndexPath$(SBSearchController*, SEL, id, id); static int (*_logos_orig$_ungrouped$SBSearchController$tableView$numberOfRowsInSection$)(SBSearchController*, SEL, id, int); static int _logos_method$_ungrouped$SBSearchController$tableView$numberOfRowsInSection$(SBSearchController*, SEL, id, int); static int (*_logos_orig$_ungrouped$SBSearchController$numberOfSectionsInTableView$)(SBSearchController*, SEL, id); static int _logos_method$_ungrouped$SBSearchController$numberOfSectionsInTableView$(SBSearchController*, SEL, id); static id (*_logos_orig$_ungrouped$SBSearchController$tableView$viewForHeaderInSection$)(SBSearchController*, SEL, id, int); static id _logos_method$_ungrouped$SBSearchController$tableView$viewForHeaderInSection$(SBSearchController*, SEL, id, int); 
 
-#line 16 "Tweak.xm"
+#line 17 "Tweak.xm"
 
 static void _logos_method$_ungrouped$UITableView$setAlpha$(UITableView* self, SEL _cmd, float alpha) { 
     if (self != table) 
@@ -113,10 +114,16 @@ static id _logos_method$_ungrouped$SBSearchController$tableView$cellForRowAtInde
         [cell clearContents];
     } else {
         cell = [[[SBSearchTableViewCell alloc] initWithStyle:(UITableViewCellStyleDefault) reuseIdentifier:@"dude"] autorelease]; 
-        float f = sectionHeaderWidth;
         
-        object_setInstanceVariable(cell, "_sectionHeaderWidth", f); 
         
+        
+        
+
+        
+        float *secWidth = &(MSHookIvar<float>(cell, "_sectionHeaderWidth")); 
+        if (secWidth) {
+            *secWidth = sectionHeaderWidth;
+        }
         [cell setEdgeInset:0];
     }
 
@@ -189,4 +196,4 @@ static id _logos_method$_ungrouped$SBSearchController$tableView$viewForHeaderInS
 
 static __attribute__((constructor)) void _logosLocalInit() {
 {Class _logos_class$_ungrouped$UITableView = objc_getClass("UITableView"); MSHookMessageEx(_logos_class$_ungrouped$UITableView, @selector(setAlpha:), (IMP)&_logos_method$_ungrouped$UITableView$setAlpha$, (IMP*)&_logos_orig$_ungrouped$UITableView$setAlpha$);Class _logos_class$_ungrouped$SBSearchView = objc_getClass("SBSearchView"); MSHookMessageEx(_logos_class$_ungrouped$SBSearchView, @selector(initWithFrame:withContent:onWallpaper:), (IMP)&_logos_method$_ungrouped$SBSearchView$initWithFrame$withContent$onWallpaper$, (IMP*)&_logos_orig$_ungrouped$SBSearchView$initWithFrame$withContent$onWallpaper$);Class _logos_class$_ungrouped$SBApplicationController = objc_getClass("SBApplicationController"); MSHookMessageEx(_logos_class$_ungrouped$SBApplicationController, @selector(loadApplications), (IMP)&_logos_method$_ungrouped$SBApplicationController$loadApplications, (IMP*)&_logos_orig$_ungrouped$SBApplicationController$loadApplications);Class _logos_class$_ungrouped$SBSearchController = objc_getClass("SBSearchController"); { const char *_typeEncoding = "c@:"; class_addMethod(_logos_class$_ungrouped$SBSearchController, @selector(shouldGTFO), (IMP)&_logos_method$_ungrouped$SBSearchController$shouldGTFO, _typeEncoding); }MSHookMessageEx(_logos_class$_ungrouped$SBSearchController, @selector(_hasSearchResults), (IMP)&_logos_method$_ungrouped$SBSearchController$_hasSearchResults, (IMP*)&_logos_orig$_ungrouped$SBSearchController$_hasSearchResults);MSHookMessageEx(_logos_class$_ungrouped$SBSearchController, @selector(respondsToSelector:), (IMP)&_logos_method$_ungrouped$SBSearchController$respondsToSelector$, (IMP*)&_logos_orig$_ungrouped$SBSearchController$respondsToSelector$);MSHookMessageEx(_logos_class$_ungrouped$SBSearchController, @selector(tableView:heightForRowAtIndexPath:), (IMP)&_logos_method$_ungrouped$SBSearchController$tableView$heightForRowAtIndexPath$, (IMP*)&_logos_orig$_ungrouped$SBSearchController$tableView$heightForRowAtIndexPath$);{ const char *_typeEncoding = "i@:@i"; class_addMethod(_logos_class$_ungrouped$SBSearchController, @selector(tableView:sectionForSectionIndexTitle:atIndex:), (IMP)&_logos_method$_ungrouped$SBSearchController$tableView$sectionForSectionIndexTitle$atIndex$, _typeEncoding); }{ const char *_typeEncoding = "@@:@"; class_addMethod(_logos_class$_ungrouped$SBSearchController, @selector(sectionIndexTitlesForTableView:), (IMP)&_logos_method$_ungrouped$SBSearchController$sectionIndexTitlesForTableView$, _typeEncoding); }MSHookMessageEx(_logos_class$_ungrouped$SBSearchController, @selector(tableView:cellForRowAtIndexPath:), (IMP)&_logos_method$_ungrouped$SBSearchController$tableView$cellForRowAtIndexPath$, (IMP*)&_logos_orig$_ungrouped$SBSearchController$tableView$cellForRowAtIndexPath$);MSHookMessageEx(_logos_class$_ungrouped$SBSearchController, @selector(tableView:didSelectRowAtIndexPath:), (IMP)&_logos_method$_ungrouped$SBSearchController$tableView$didSelectRowAtIndexPath$, (IMP*)&_logos_orig$_ungrouped$SBSearchController$tableView$didSelectRowAtIndexPath$);MSHookMessageEx(_logos_class$_ungrouped$SBSearchController, @selector(tableView:numberOfRowsInSection:), (IMP)&_logos_method$_ungrouped$SBSearchController$tableView$numberOfRowsInSection$, (IMP*)&_logos_orig$_ungrouped$SBSearchController$tableView$numberOfRowsInSection$);MSHookMessageEx(_logos_class$_ungrouped$SBSearchController, @selector(numberOfSectionsInTableView:), (IMP)&_logos_method$_ungrouped$SBSearchController$numberOfSectionsInTableView$, (IMP*)&_logos_orig$_ungrouped$SBSearchController$numberOfSectionsInTableView$);MSHookMessageEx(_logos_class$_ungrouped$SBSearchController, @selector(tableView:viewForHeaderInSection:), (IMP)&_logos_method$_ungrouped$SBSearchController$tableView$viewForHeaderInSection$, (IMP*)&_logos_orig$_ungrouped$SBSearchController$tableView$viewForHeaderInSection$);} }
-#line 183 "Tweak.xm"
+#line 190 "Tweak.xm"

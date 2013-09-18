@@ -2,6 +2,7 @@
 #import <AppList.h> //Using AppList to generate list of apps
 #import <SBSearchTableViewCell.h>
 #import <SBUIController.h>
+#import <substrate.h>
 
 ALApplicationList *apps;
 ALApplicationTableDataSource *dataSource;
@@ -106,10 +107,16 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
         [cell clearContents];
     } else {
         cell = [[[SBSearchTableViewCell alloc] initWithStyle:(UITableViewCellStyleDefault) reuseIdentifier:@"dude"] autorelease]; //Actually need a style
-        float f = sectionHeaderWidth;
+        //float f = sectionHeaderWidth;
         //void *fin = dynamic_cast<float *>(sectionHeaderWidth);
-        object_setInstanceVariable(cell, "_sectionHeaderWidth", f); //setInstanceVariable doesn't work on floats
+        //object_setInstanceVariable(cell, "_sectionHeaderWidth", f); //setInstanceVariable doesn't work on floats
         //MSHookIvar<float>(cell, "_sectionHeaderWidth") = sectionHeaderWidth;
+
+        //Thanks caughtinflux! Broken substrate.h is a killer
+        float *secWidth = &(MSHookIvar<float>(cell, "_sectionHeaderWidth")); 
+        if (secWidth) {
+            *secWidth = sectionHeaderWidth;
+        }
         [cell setEdgeInset:0];
     }
 
