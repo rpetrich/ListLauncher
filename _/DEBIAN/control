@@ -5,7 +5,6 @@ Package: com.twodayslate.listlauncher6
 Section: Tweaks
 Pre-Depends: firmware (>= 4.0)
 Depends: mobilesubstrate
-Version: 6.0
 Architecture: iphoneos-arm
 Description: Scrolling list of all your apps for quick access!
 Depiction: http://chpwn.com/cydia/listlauncher.html
@@ -13,3 +12,5 @@ Homepage: http://chpwn.com/cydia/listlauncher.html
 Sponsor: thebigboss.org <http://thebigboss.org>
 Tag: cydia::free, purpose::extension
 dev: twodayslate, chpwn
+Version: 6.0-8
+Installed-Size: 0
