@@ -58,7 +58,7 @@ static void _logos_method$_ungrouped$SBApplicationController$loadApplications(SB
 
 
 static BOOL _logos_method$_ungrouped$SBSearchController$shouldGTFO(SBSearchController* self, SEL _cmd) { 
-    SBSearchView *sv;
+    SBSearchView *sv = nil;
     object_getInstanceVariable(self, "_searchView", (void**)sv);
     
     return ![[[sv searchBar] text] isEqualToString:@""]; 
@@ -142,7 +142,7 @@ static id _logos_method$_ungrouped$SBSearchController$tableView$cellForRowAtInde
     
     [cell setFirstInSection:YES];
 
-    SBSearchView *sv;
+    SBSearchView *sv = nil;
     object_getInstanceVariable(self, "_searchView", (void**)sv);
     [[sv tableView] setScrollEnabled:YES];
     [cell setNeedsDisplay];

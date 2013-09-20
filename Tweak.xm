@@ -51,7 +51,7 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
 
 %new(c@:)
 -(BOOL)shouldGTFO { 
-    SBSearchView *sv;
+    SBSearchView *sv = nil;
     object_getInstanceVariable(self, "_searchView", (void**)sv);
     //Ivar object_getInstanceVariable(id obj, const char *name, void **outValue)
     return ![[[sv searchBar] text] isEqualToString:@""]; 
@@ -112,7 +112,7 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
         //object_setInstanceVariable(cell, "_sectionHeaderWidth", f); //setInstanceVariable doesn't work on floats
         //MSHookIvar<float>(cell, "_sectionHeaderWidth") = sectionHeaderWidth;
 
-        //Thanks caughtinflux! Broken substrate.h is a killer
+        //Thanks caughtinflux and Jack! Broken substrate.h is a killer
         float *secWidth = &(MSHookIvar<float>(cell, "_sectionHeaderWidth")); 
         if (secWidth) {
             *secWidth = sectionHeaderWidth;
@@ -135,7 +135,7 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
     //[cell setSubtitle:]; //see above
     [cell setFirstInSection:YES];
 
-    SBSearchView *sv;
+    SBSearchView *sv = nil;
     object_getInstanceVariable(self, "_searchView", (void**)sv);
     [[sv tableView] setScrollEnabled:YES];
     [cell setNeedsDisplay];
