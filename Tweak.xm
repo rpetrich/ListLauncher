@@ -51,7 +51,6 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
 
 %hook SBSearchController
 
-//%new(c@:)
 %new
 -(BOOL)shouldDisplayListLauncher { 
     SBSearchView *sv = nil;
