@@ -2,8 +2,8 @@
 #import <AppList.h> //Using AppList to generate list of apps
 #import <substrate.h>
 
-ALApplicationList *apps;
-ALApplicationTableDataSource *dataSource;
+static ALApplicationList *apps;
+static ALApplicationTableDataSource *dataSource;
 
 static UITableView *table = nil;
 static CGFloat sectionHeaderWidth;
@@ -46,11 +46,12 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
 
 %hook SBSearchController
 
-%new(c@:)
+//%new(c@:)
+%new
 -(BOOL)shouldDisplayListLauncher { 
-    //SBSearchView *sv = nil;
-    //object_getInstanceVariable(self, "_searchView", (void**)sv);
-    return [[[[SBSearchView searchView] searchBar] text] isEqualToString:@""];
+    SBSearchView *sv = nil;
+    object_getInstanceVariable(self, "_searchView", (void**)sv);
+    return [[[sv searchBar] text] isEqualToString:@""];
 }
 
 -(BOOL)shouldShowKeyboardOnScroll { 
@@ -60,14 +61,14 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
     return %orig;
 }
 
-- (void)tableView: (id)tableView didSelectRowAtIndexPath: (id)indexPath {
+- (void)tableView:(id)tableView didSelectRowAtIndexPath:(id)indexPath {
     //This launches the app
     if (![self shouldDisplayListLauncher]) { %orig; return; }
 
     id app = [dataSource displayIdentifierForIndexPath:indexPath];
-    //SBUIController *sv;
-    //object_getInstanceVariable(objc_getClass("SBUIController"), "_sharedInstance", (void**)sv);
-    [[objc_getClass("SBUIController") sharedInstance] activateApplicationAnimated:app];
+    SBUIController *sv;
+    object_getInstanceVariable(objc_getClass("SBUIController"), "_sharedInstance", (void**)sv);
+    [sv activateApplicationAnimated:app];
     //[[SBUIController sharedInstance] activateApplicationAnimated:app];
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
 }
@@ -76,10 +77,12 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
     return searchRowHeight; 
 }
 
-- (id)tableView: (id)tableView cellForRowAtIndexPath: (id)indexPath {
+- (id)tableView:(id)tableView cellForRowAtIndexPath:(id)indexPath {
     // Asks the data source for a cell to insert in a particular 
     // location of the table view. (required)
     if (![self shouldDisplayListLauncher]) return %orig;
+
+    NSLog(@"finding a cell in (id)tableView:(id)arg1 cellForRowAtIndexPath:(id)arg2");
 
     int s = [indexPath section];
 
