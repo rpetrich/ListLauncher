@@ -2,6 +2,9 @@
 #import <AppList.h> //Using AppList to generate list of apps
 #import <substrate.h>
 
+#import <SBUIController.h>
+#import <SBSearchtableViewCell.h>
+
 static ALApplicationList *apps;
 static ALApplicationTableDataSource *dataSource;
 
@@ -36,11 +39,13 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
 %hook SBApplicationController
 - (id)loadApplications {
     // Gets the list of all the applications
-    %orig;
+    id rdd = %orig;
 
     apps = [ALApplicationList sharedApplicationList];
     dataSource = [[ALApplicationTableDataSource alloc] init];
     dataSource.sectionDescriptors = [ALApplicationTableDataSource standardSectionDescriptors];
+
+    return rdd;
 }
 %end
 
@@ -66,7 +71,7 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
     if (![self shouldDisplayListLauncher]) { %orig; return; }
 
     id app = [dataSource displayIdentifierForIndexPath:indexPath];
-    SBUIController *sv;
+    SBUIController *sv = nil;
     object_getInstanceVariable(objc_getClass("SBUIController"), "_sharedInstance", (void**)sv);
     [sv activateApplicationAnimated:app];
     //[[SBUIController sharedInstance] activateApplicationAnimated:app];
@@ -88,7 +93,7 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
 
     id cell = [tableView dequeueReusableCellWithIdentifier:@"dude"];
     if (cell) {
-        [cell clearContents];
+        //[cell clearContents];
     } else {
         cell = [[[SBSearchTableViewCell alloc] initWithStyle:(UITableViewCellStyleDefault) reuseIdentifier:@"dude"] autorelease]; //Actually need a style
         //Thanks caughtinflux and Jack!
@@ -114,9 +119,9 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
     //[cell setSubtitle:]; //see above
     [cell setFirstInSection:YES];
 
-    //SBSearchView *sv = nil;
-    //object_getInstanceVariable(self, "_searchView", (void**)sv);
-    [[SBSearchView tableView] setScrollEnabled:YES];
+    SBSearchView *sv = nil;
+    object_getInstanceVariable(self, "_tableView", (void**)sv);
+    [sv setScrollEnabled:YES];
     //[[sv tableView] setScrollEnabled:YES];
     [cell setNeedsDisplay];
 

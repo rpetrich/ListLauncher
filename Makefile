@@ -1,6 +1,6 @@
 THEOS_DEVICE_IP=192.168.0.100
 
-include /opt/theos/makefiles/common.mk
+include /Users/zac/theos/makefiles/common.mk
 TWEAK_NAME = ListLauncher
 ListLauncher_FILES = Tweak.xm
 ListLauncher_FRAMEWORKS = UIKit
