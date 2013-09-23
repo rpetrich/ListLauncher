@@ -85,7 +85,10 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
     // location of the table view. (required)
     if (![self shouldDisplayListLauncher]) return %orig;
 
-    NSString *name = [dataSource cellDescriptorForIndexPath:indexPath];
+
+    NSString *displayIdentifier = [dataSource displayIdentifierForIndexPath:indexPath];
+    NSString *name = [apps.applications objectForKey:displayIdentifier];
+
     NSLog(@"finding a cell %@",name);
 
     int s = [indexPath section];
