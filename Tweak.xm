@@ -100,11 +100,12 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
     if (cell) {
         //[cell clearContents];
     } else {
-        cell = [[[SBSearchTableViewCell alloc] initWithStyle:(UITableViewCellStyleDefault) reuseIdentifier:@"dude"] autorelease]; //Actually need a style
-        //Thanks caughtinflux and Jack!
-        float *secWidth = &(MSHookIvar<float>(cell, "_sectionHeaderWidth")); 
+        //Thanks DHowett!
+        cell = [[[%c(SBSearchTableViewCell) alloc] initWithStyle:(UITableViewCellStyleDefault) reuseIdentifier:@"dude"] autorelease]; //Actually need a style
+        //Thanks caughtinflux and Jack! (sorta)
+        float &secWidth = MSHookIvar<float>(cell, "_sectionHeaderWidth"); 
         if (secWidth) {
-            *secWidth = sectionHeaderWidth;
+            secWidth = sectionHeaderWidth;
         }
         [cell setEdgeInset:0];
     }

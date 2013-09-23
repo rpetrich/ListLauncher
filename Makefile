@@ -14,8 +14,6 @@ ListLauncher_LIBRARIES = applist
 # ADDITIONAL_LDFLAGS = -L/opt/theos/lib/
 # ListLauncher_OBJCCFlAGS= -L/opt/theos/lib/
 
-TARGET_IPHONEOS_DEPLOYMENT_VERSION = 6.1
-
 include /opt/theos/makefiles/common.mk
 include $(THEOS_MAKE_PATH)/tweak.mk
 
