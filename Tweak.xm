@@ -38,30 +38,26 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
         table.rowHeight = searchRowHeight;
     }
 
+    dataSource = [[ALApplicationTableDataSource alloc] init];
+    dataSource.sectionDescriptors = [ALApplicationTableDataSource standardSectionDescriptors];
+    apps = [ALApplicationList sharedApplicationList];
+
     return self;
 }
 %end
 
-%hook SBApplicationController
-- (id)loadApplications {
-    // Gets the list of all the applications
-    id rdd = %orig;
-
-    apps = [ALApplicationList sharedApplicationList];
-    dataSource = [[ALApplicationTableDataSource alloc] init];
-    dataSource.sectionDescriptors = [ALApplicationTableDataSource standardSectionDescriptors];
-
-    return rdd;
-}
-%end
+// %hook SBApplicationController
+// - (id)loadApplications {
+//     return %orig;
+// }
+// %end
 
 %hook SBSearchController
 
 %new
 -(BOOL)shouldDisplayListLauncher { 
-    SBSearchView *sv = nil;
-    object_getInstanceVariable(self, "_searchView", (void**)sv);
-    return [[[sv searchBar] text] isEqualToString:@""];
+    //Get's the search bar's text to check to see if it should display LL6
+    return [[[[self searchView] searchBar] text] isEqualToString:@""];
 }
 
 -(BOOL)shouldShowKeyboardOnScroll { 
@@ -76,10 +72,7 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
     if (![self shouldDisplayListLauncher]) { %orig; return; }
 
     id app = [dataSource displayIdentifierForIndexPath:indexPath];
-    SBUIController *sv = nil;
-    object_getInstanceVariable(objc_getClass("SBUIController"), "_sharedInstance", (void**)sv);
-    [sv activateApplicationAnimated:app];
-    //[[SBUIController sharedInstance] activateApplicationAnimated:app];
+    [[objc_getClass("SBUIController") sharedInstance] activateApplicationAnimated:app];
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
 }
 
@@ -87,12 +80,13 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
     return searchRowHeight; 
 }
 
-- (id)tableView:(id)tableView cellForRowAtIndexPath:(id)indexPath {
+- (id)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     // Asks the data source for a cell to insert in a particular 
     // location of the table view. (required)
     if (![self shouldDisplayListLauncher]) return %orig;
 
-    NSLog(@"finding a cell in (id)tableView:(id)arg1 cellForRowAtIndexPath:(id)arg2");
+    NSString *name = [dataSource cellDescriptorForIndexPath:indexPath];
+    NSLog(@"finding a cell %@",name);
 
     int s = [indexPath section];
 
@@ -120,14 +114,13 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
         [cell setFirstInTableView:NO];
     }
 
-    [cell setTitle:[[dataSource displayIdentifierForIndexPath:indexPath] description]];
+    [cell setTitle:name];
+    object_setInstanceVariable(cell, "_title", name);
     //[cell setAuxiliaryTitle:]; //It would be cool if it showed the last message etc; similiar to runninglist
     //[cell setSubtitle:]; //see above
     [cell setFirstInSection:YES];
 
-    SBSearchView *sv = nil;
-    object_getInstanceVariable(self, "_tableView", (void**)sv);
-    [sv setScrollEnabled:YES];
+    [[[self searchView] tableView] setScrollEnabled:YES];
     //[[sv tableView] setScrollEnabled:YES];
     [cell setNeedsDisplay];
 
@@ -141,6 +134,8 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
 
 - (int)numberOfSectionsInTableView: (id)tableView {
     if (![self shouldDisplayListLauncher]) return %orig;
+    NSString *count = [NSString stringWithFormat:@"%d",[apps applicationCount]];
+    NSLog(@"Count apps: %@",count);
     return [apps applicationCount];
 }
 
