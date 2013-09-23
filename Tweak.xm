@@ -3,7 +3,13 @@
 #import <substrate.h>
 
 #import <SBUIController.h>
-#import <SBSearchtableViewCell.h>
+#import <SBSearchTableViewCell.h>
+#import <SBSearchController.h>
+
+//Thanks caughtinflux
+@interface SBSearchController (LLAdditions)
+    - (BOOL)shouldDisplayListLauncher;
+@end
 
 static ALApplicationList *apps;
 static ALApplicationTableDataSource *dataSource;
