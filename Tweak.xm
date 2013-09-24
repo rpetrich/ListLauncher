@@ -30,27 +30,34 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
 
 %hook SBSearchView
 - (id)initWithFrame: (CGRect)frame withContent: (id)content onWallpaper: (id)wallpaper {
-    if ((self = %orig)) {
-        table = [self tableView];
-        BOOL isWildcat = is_wildcat();
-        sectionHeaderWidth = isWildcat ? 68.0f : 39.0f;
-        searchRowHeight = isWildcat ? 72.0f : 44.0f;
-        table.rowHeight = searchRowHeight;
-    }
+    // if ((self = %orig)) {
+    //     table = [self tableView];
+    //     BOOL isWildcat = is_wildcat();
+    //     sectionHeaderWidth = isWildcat ? 68.0f : 39.0f;
+    //     searchRowHeight = isWildcat ? 72.0f : 44.0f;
+    //     table.rowHeight = searchRowHeight;
+    //     [table setScrollEnabled:YES];
+    // }
+    // return self;
 
+
+    id ans = %orig;
+
+    table = [self tableView];
+    BOOL isWildcat = is_wildcat();
+    sectionHeaderWidth = isWildcat ? 68.0f : 39.0f;
+    searchRowHeight = isWildcat ? 72.0f : 44.0f;
+    table.rowHeight = searchRowHeight;
+    [table setScrollEnabled:YES];
+    apps = [ALApplicationList sharedApplicationList];
     dataSource = [[ALApplicationTableDataSource alloc] init];
     dataSource.sectionDescriptors = [ALApplicationTableDataSource standardSectionDescriptors];
-    apps = [ALApplicationList sharedApplicationList];
-
-    return self;
+    table.dataSource = dataSource;
+    dataSource.tableView = table;
+    NSLog(@"ONLY CALLED ONCE"); NSLog(@"ONLY CALLED ONCE"); NSLog(@"ONLY CALLED ONCE");
+    return ans;
 }
 %end
-
-// %hook SBApplicationController
-// - (id)loadApplications {
-//     return %orig;
-// }
-// %end
 
 %hook SBSearchController
 
@@ -83,12 +90,16 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
 - (id)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     // Asks the data source for a cell to insert in a particular 
     // location of the table view. (required)
-    if (![self shouldDisplayListLauncher]) return %orig;
+    if (![self shouldDisplayListLauncher]) { return %orig; }
 
+    //NSLog(@"indexpath(%d,%d)",indexPath.row,indexPath.section);
+    // int index = indexPath.section;
+    // displayIdentifiers = [apps.applications allKeys];
+    // displayNames = [apps.applications allValues];
+    // NSString *name = [displayNames objectAtIndex:index];
 
     NSString *displayIdentifier = [dataSource displayIdentifierForIndexPath:indexPath];
-    NSString *name = [apps.applications objectForKey:displayIdentifier];
-
+    NSString *name = [apps valueForKey:@"displayName" forDisplayIdentifier:displayIdentifier];
     NSLog(@"finding a cell %@",name);
 
     int s = [indexPath section];
@@ -137,9 +148,10 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
 
 - (int)numberOfSectionsInTableView: (id)tableView {
     if (![self shouldDisplayListLauncher]) return %orig;
-    NSString *count = [NSString stringWithFormat:@"%d",[apps applicationCount]];
-    NSLog(@"Count apps: %@",count);
     return [apps applicationCount];
+    //int count = [dataSource numberOfSectionsInTableView:table];
+    //NSLog(@"numberofSections:%d in %@",count,[dataSource.sectionDescriptors description]);
+    //return count;
 }
 
 - (id)tableView: (id)tv viewForHeaderInSection: (int)s {
@@ -149,10 +161,11 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
     if (![self shouldDisplayListLauncher]) return %orig;
 
     id v = [[UIView alloc] initWithFrame:CGRectMake(0, 0, sectionHeaderWidth, searchRowHeight)];
-    NSIndexPath *path = [NSIndexPath indexPathWithIndex:s];
+    NSIndexPath *indexPath = [NSIndexPath indexPathForRow:1 inSection:s];
+    NSString *displayIdentifier = [dataSource displayIdentifierForIndexPath:indexPath];
     //id m = [[[SBIconModel sharedInstance] applicationIconForDisplayIdentifier:[dataSource displayIdentifierForIndexPath:path]] getIconImage:is_wildcat()];
     //id i = [[UIImageView alloc] initWithImage:m];
-    id i = [apps iconOfSize:ALApplicationIconSizeSmall forDisplayIdentifier:[dataSource displayIdentifierForIndexPath:path]];
+    id i = [apps iconOfSize:ALApplicationIconSizeSmall forDisplayIdentifier:displayIdentifier];
     CGRect r = [i frame];
     r.size = [i size];
     CGSize size = [v frame].size;
