@@ -43,6 +43,8 @@
 - (void)updateResultsIfNecessary;
 - (void)dealloc;
 - (id)init;
+    -(NSString *)getDisplayIdentifierInt:(int)index;
+    -(NSString *)getDisplayIdentifier:(NSIndexPath *)indexPath;
 
 @end
 

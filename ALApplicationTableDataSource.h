@@ -27,9 +27,10 @@
 - (void)insertSectionDescriptor:(NSDictionary *)sectionDescriptor atIndex:(NSInteger)index;
 - (void)removeSectionDescriptorAtIndex:(NSInteger)index;
 - (void)removeSectionDescriptorsAtIndexes:(NSIndexSet *)indexSet;
-
+- (NSString *)displayIdentifierForRow:(NSInteger)row;
+- (NSInteger *)rowCount;
 - (BOOL)waitUntilDate:(NSDate *)date forContentInSectionAtIndex:(NSInteger)sectionIndex;
-
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView;
 @end
 
 extern const NSString *ALSectionDescriptorTitleKey;
