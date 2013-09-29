@@ -8,9 +8,7 @@
 
 //Thanks caughtinflux
 @interface SBSearchController (LLAdditions)
-    - (BOOL)shouldDisplayListLauncher;
-    -(NSString *)getDisplayIdentifierInt:(int)index;
-    -(NSString *)getDisplayIdentifier:(NSIndexPath *)indexPath;
+    -(BOOL)shouldDisplayListLauncher;
 @end
 
 @interface UIApplication (Undocumented)
@@ -18,8 +16,12 @@
 @end    
 
 static ALApplicationList *apps = nil;
+
 static NSArray *displayIdentifiers = nil;
-static ALApplicationTableDataSource *dataSource = nil;
+static NSArray *displayNames = nil;
+
+//static NSArray *displayIdentifiers = nil;
+//static ALApplicationTableDataSource *dataSource = nil;
 
 static UITableView *table = nil;
 static CGFloat sectionHeaderWidth;
@@ -45,15 +47,30 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
         // table.rowHeight = searchRowHeight;
         // [table setScrollEnabled:YES];
 
+        apps = [ALApplicationList sharedApplicationList];
+
+
+        displayIdentifiers = [[apps.applications allKeys] sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+            return [[apps.applications objectForKey:obj1] compare:[apps.applications objectForKey:obj2]];}];
+        displayNames = [[apps.applications allValues] sortedArrayUsingSelector:@selector(compare:)];
+        [displayIdentifiers retain];
+        [displayNames retain];
+
+        //dataSource = [[ALApplicationTableDataSource alloc] init];
+        //dataSource.sectionDescriptors = [ALApplicationTableDataSource standardSectionDescriptors];
+
         table = [self tableView];
         BOOL isWildcat = is_wildcat();
         sectionHeaderWidth = isWildcat ? 68.0f : 39.0f;
         searchRowHeight = isWildcat ? 72.0f : 44.0f;
         table.rowHeight = searchRowHeight;
         [table setScrollEnabled:YES];
-        apps = [ALApplicationList sharedApplicationList];
-        dataSource = [[ALApplicationTableDataSource alloc] init];
-        dataSource.sectionDescriptors = [ALApplicationTableDataSource standardSectionDescriptors];
+
+
+
+        //dataSource.tableView = table;
+        //table.dataSource = dataSource;
+        
     }
     return self;
 
@@ -70,6 +87,8 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
 
 %hook SBSearchController
 
+//static NSArray *displayIdentifiers = [[NSArray alloc] init];
+
 %new
 -(BOOL)shouldDisplayListLauncher { 
     //Get's the search bar's text to check to see if it should display LL6
@@ -83,30 +102,33 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
     return %orig;
 }
 
-%new
--(NSString *)getDisplayIdentifier:(NSIndexPath *)indexPath {
-    if(displayIdentifiers == nil || [displayIdentifiers count] != [apps applicationCount]) {
-        NSLog(@"inside");
-        displayIdentifiers = [[apps.applications allKeys] sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
-        return [[apps.applications objectForKey:obj1] compare:[apps.applications objectForKey:obj2]];}];
-    }
-    int index = indexPath.section;
-    NSString *displayIdentifier = [displayIdentifiers objectAtIndex:index];
-    return [apps valueForKey:@"displayName" forDisplayIdentifier:displayIdentifier];
-}
 
-%new
--(NSString *)getDisplayIdentifierInt:(int)index {
-    if(displayIdentifiers == nil || [displayIdentifiers count] != [apps applicationCount]) {
-        NSLog(@"inside");
-        displayIdentifiers = [[apps.applications allKeys] sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
-        return [[apps.applications objectForKey:obj1] compare:[apps.applications objectForKey:obj2]];}];
-    }
-    NSString *displayIdentifier = [displayIdentifiers objectAtIndex:index];
-    return [apps valueForKey:@"displayName" forDisplayIdentifier:displayIdentifier];
-}
 
-- (void)tableView:(id)tableView didSelectRowAtIndexPath:(id)indexPath {
+
+// %new
+// -(NSString *)getDisplayIdentifier:(NSIndexPath *)indexPath {
+//     if(displayIdentifiers == nil || [displayIdentifiers count] != [apps applicationCount]) {
+//         NSLog(@"inside");
+//         displayIdentifiers = [[apps.applications allKeys] sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+//         return [[apps.applications objectForKey:obj1] compare:[apps.applications objectForKey:obj2]];}];
+//     }
+//     int index = indexPath.section;
+//     NSString *displayIdentifier = [displayIdentifiers objectAtIndex:index];
+//     return [apps valueForKey:@"displayName" forDisplayIdentifier:displayIdentifier];
+// }
+
+// %new
+// -(NSString *)getDisplayIdentifierInt:(int)index {
+//     if(displayIdentifiers == nil || [displayIdentifiers count] != [apps applicationCount]) {
+//         NSLog(@"inside");
+//         displayIdentifiers = [[apps.applications allKeys] sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+//         return [[apps.applications objectForKey:obj1] compare:[apps.applications objectForKey:obj2]];}];
+//     }
+//     NSString *displayIdentifier = [displayIdentifiers objectAtIndex:index];
+//     return [apps valueForKey:@"displayName" forDisplayIdentifier:displayIdentifier];
+// }
+
+- (void)tableView:(id)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     //This launches the app
     if (![self shouldDisplayListLauncher]) { %orig; return; }
 
@@ -116,7 +138,11 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
 
     NSLog(@"inside didSelectRowAtIndexPath");
 
-    NSString *displayIdentifier = [self getDisplayIdentifier:indexPath];
+
+    int index = indexPath.section;
+
+    NSString *displayIdentifier = [displayIdentifiers objectAtIndex:index];
+    //NSString *displayIdentifier = [self getDisplayIdentifier:indexPath];
     NSLog(@"inside didSelectRowAtIndexPath %@",displayIdentifier);
     [[UIApplication sharedApplication] launchApplicationWithIdentifier:displayIdentifier suspended:NO];
     //[[objc_getClass("SBUIController") sharedInstance] activateApplicationAnimated:displayIdentifier];
@@ -134,6 +160,10 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
 
     NSLog(@"inside cellForRowAtIndexPath");
 
+    // if(![displayIdentifiers count]) {
+    //     displayIdentifiers = [[apps.applications allKeys] sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+    //     return [[apps.applications objectForKey:obj1] compare:[apps.applications objectForKey:obj2]];}];
+    // }
     //NSLog(@"indexpath(%d,%d)",indexPath.row,indexPath.section);
     //int index = indexPath.section;
     //NSArray *displayIdentifiers = [apps.applications allKeys];
@@ -144,7 +174,9 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
 
     //NSString *displayIdentifier = [dataSource displayIdentifierForIndexPath:indexPath];
     //NSString *name = [apps valueForKey:@"displayName" forDisplayIdentifier:displayIdentifier];
-    NSString *name = [self getDisplayIdentifier:indexPath];
+
+    //NSString *name = [self getDisplayIdentifier:indexPath];
+    NSString *name = [apps valueForKey:@"displayName" forDisplayIdentifier:[displayIdentifiers objectAtIndex:indexPath.section]];
     NSLog(@"finding a cell %@",name);
 
     int s = [indexPath section];
@@ -225,7 +257,7 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
     [v addSubview:i];
     [i release];
     [v setOpaque:0]; */
-    [v setUserInteractionEnabled:NO];
+    //[v setUserInteractionEnabled:NO];
 
     return [v autorelease];
 }
