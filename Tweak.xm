@@ -49,9 +49,9 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
 
         apps = [ALApplicationList sharedApplicationList];
 
-
+        //case insentitive to properly order
         displayIdentifiers = [[apps.applications allKeys] sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
-            return [[apps.applications objectForKey:obj1] compare:[apps.applications objectForKey:obj2]];}];
+            return [[apps.applications objectForKey:obj1] caseInsensitiveCompare:[apps.applications objectForKey:obj2]];}];
         displayNames = [[apps.applications allValues] sortedArrayUsingSelector:@selector(compare:)];
         [displayIdentifiers retain];
         [displayNames retain];
@@ -65,7 +65,6 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
         searchRowHeight = isWildcat ? 72.0f : 44.0f;
         table.rowHeight = searchRowHeight;
         [table setScrollEnabled:YES];
-
 
 
         //dataSource.tableView = table;
@@ -128,14 +127,13 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
 //     return [apps valueForKey:@"displayName" forDisplayIdentifier:displayIdentifier];
 // }
 
-- (void)tableView:(id)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     //This launches the app
     if (![self shouldDisplayListLauncher]) { %orig; return; }
 
     //id app = [dataSource displayIdentifierForIndexPath:indexPath];
     //int index = ((NSIndexPath *)indexPath).section;
     //NSArray *displayIdentifiers = [apps.applications allKeys];
-
     NSLog(@"inside didSelectRowAtIndexPath");
 
 
@@ -146,6 +144,7 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
     NSLog(@"inside didSelectRowAtIndexPath %@",displayIdentifier);
     [[UIApplication sharedApplication] launchApplicationWithIdentifier:displayIdentifier suspended:NO];
     //[[objc_getClass("SBUIController") sharedInstance] activateApplicationAnimated:displayIdentifier];
+    
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
 }
 
@@ -179,11 +178,11 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
     NSString *name = [apps valueForKey:@"displayName" forDisplayIdentifier:[displayIdentifiers objectAtIndex:indexPath.section]];
     NSLog(@"finding a cell %@",name);
 
-    int s = [indexPath section];
+    //int s = indexPath.section;
 
-    id cell = [tableView dequeueReusableCellWithIdentifier:@"dude"];
+    SBSearchTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"dude"];
     if (cell) {
-        //[cell clearContents];
+        //[cell clearContents]; //Calling this creates a bug where you can't scroll up?
     } else {
         //Thanks DHowett!
         cell = [[[%c(SBSearchTableViewCell) alloc] initWithStyle:(UITableViewCellStyleDefault) reuseIdentifier:@"dude"] autorelease]; //Actually need a style
@@ -198,22 +197,36 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
     [cell setBadged:NO];
     [cell setBelowTopHit:YES];
     [cell setUsesAlternateBackgroundColor:NO];
-    if (s == 0) {
+
+    if (indexPath.section == 0) {
         [cell setFirstInTableView:YES];
     }
     else {
         [cell setFirstInTableView:NO];
     }
 
-    [cell setTitle:name];
-    object_setInstanceVariable(cell, "_title", name);
+    //[cell setTitle:name];
+    cell.title = name;
+
+    //object_setInstanceVariable(cell, "_title", name);
     //[cell setAuxiliaryTitle:]; //It would be cool if it showed the last message etc; similiar to runninglist
     //[cell setSubtitle:]; //see above
-    [cell setFirstInSection:YES];
-
+    //[cell setFirstInSection:YES];
+    cell.detailTextLabel.bounds = CGRectMake(20,0,320,20);
+    cell.detailTextLabel.frame = CGRectMake(20,0,320,20);
+    // cell.selectionStyle = UITableViewCellSelectionStyleBlue;
+    // cell.userInteractionEnabled = YES;
+    //[cell setUserInteractionEnabled:YES];
     [[[self searchView] tableView] setScrollEnabled:YES];
+    //[[self searchView] tableView].allowsSelection=YES;
     //[[sv tableView] setScrollEnabled:YES];
     [cell setNeedsDisplay];
+
+
+    // UIImageView *imv = [[UIImageView alloc]initWithFrame:CGRectMake(3,2, 20, 25)];
+    // imv.image = [apps iconOfSize:ALApplicationIconSizeSmall forDisplayIdentifier:[displayIdentifiers objectAtIndex:indexPath.section]];
+    // [cell addSubview:imv];
+    // [imv release];
 
     return cell;
 }
@@ -238,28 +251,52 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
 
     if (![self shouldDisplayListLauncher]) return %orig;
 
-    id v = [[UIView alloc] initWithFrame:CGRectMake(0, 0, sectionHeaderWidth, searchRowHeight)];
-    //NSIndexPath *indexPath = [NSIndexPath indexPathForRow:1 inSection:s];
-    //NSString *displayIdentifier = [displayIdentifiers objectAtIndex:index];
+    UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, sectionHeaderWidth, searchRowHeight)];
+    NSIndexPath *indexPath = [NSIndexPath indexPathForRow:1 inSection:index];
+    NSString *displayIdentifier = [displayIdentifiers objectAtIndex:index];
     //NSString *displayIdentifier = [dataSource displayIdentifierForIndexPath:indexPath];
     //id m = [[[SBIconModel sharedInstance] applicationIconForDisplayIdentifier:displayIdentifier] getIconImage:is_wildcat()];
     //id i = [[UIImageView alloc] initWithImage:m];
-
-
     
-    /*id i = [apps iconOfSize:ALApplicationIconSizeSmall forDisplayIdentifier:displayIdentifier];
-    CGRect r = [i frame];
-    r.size = [i size];
-    CGSize size = [v frame].size;
-    r.origin.y = (size.height - r.size.height) * 0.5f;
-    r.origin.x = (size.width - r.size.width) * 0.5f;
-    [i setFrame:r];
-    [v addSubview:i];
-    [i release];
-    [v setOpaque:0]; */
-    //[v setUserInteractionEnabled:NO];
+    UIImage *icon = [apps iconOfSize:ALApplicationIconSizeSmall forDisplayIdentifier:displayIdentifier];
+    UIImageView *iview = [[UIImageView alloc] initWithImage:icon];
+    CGRect rec = [iview bounds];
+    rec.size = [icon size];
+    CGSize size = [view frame].size;
+    rec.origin.y = (size.height - rec.size.height) * 0.5f;
+    rec.origin.x = (size.width - rec.size.width) * 0.5f;
 
-    return [v autorelease];
+    iview.frame = rec;
+    iview.layer.borderWidth = 1;
+    iview.layer.borderColor = [UIColor blackColor].CGColor;
+    //[iview setFrame:rec];
+    [view addSubview:iview];
+
+    [view setOpaque:0];
+    [view setUserInteractionEnabled:NO];
+
+    [iview release];
+
+
+     // [icon release];
+     // [view setOpaque:0];
+     //[view setUserInteractionEnabled:YES];
+
+
+     //v.image = icon;
+
+    // CGRect r = [i frame];
+    // r.size = [i size];
+    // CGSize size = [v frame].size;
+    // r.origin.y = (size.height - r.size.height) * 0.5f;
+    // r.origin.x = (size.width - r.size.width) * 0.5f;
+    // [i setFrame:r];
+    // [v addSubview:i];
+    // [i release];
+    // [v setOpaque:0];
+    
+
+    return [view autorelease];
 }
 
 %end
