@@ -28,7 +28,7 @@ static CGFloat sectionHeaderWidth;
 static CGFloat searchRowHeight;
 
 // wildcat = iPad
-static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInterfaceIdiomPad); }
+static inline BOOL isPad() { return (UI_USER_INTERFACE_IDIOM()==UIUserInterfaceIdiomPad); }
 
 %hook UITableView
 - (void)setAlpha:(float)alpha { 
@@ -60,7 +60,7 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
         //dataSource.sectionDescriptors = [ALApplicationTableDataSource standardSectionDescriptors];
 
         table = [self tableView];
-        BOOL isWildcat = is_wildcat();
+        BOOL isWildcat = isPad();
         sectionHeaderWidth = isWildcat ? 68.0f : 39.0f;
         searchRowHeight = isWildcat ? 72.0f : 44.0f;
         table.rowHeight = searchRowHeight;
@@ -211,7 +211,7 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
     //object_setInstanceVariable(cell, "_title", name);
     //[cell setAuxiliaryTitle:]; //It would be cool if it showed the last message etc; similiar to runninglist
     //[cell setSubtitle:]; //see above
-    //[cell setFirstInSection:YES];
+    [cell setFirstInSection:YES];
     cell.detailTextLabel.bounds = CGRectMake(20,0,320,20);
     cell.detailTextLabel.frame = CGRectMake(20,0,320,20);
     // cell.selectionStyle = UITableViewCellSelectionStyleBlue;
@@ -223,10 +223,14 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
     [cell setNeedsDisplay];
 
 
-    // UIImageView *imv = [[UIImageView alloc]initWithFrame:CGRectMake(3,2, 20, 25)];
-    // imv.image = [apps iconOfSize:ALApplicationIconSizeSmall forDisplayIdentifier:[displayIdentifiers objectAtIndex:indexPath.section]];
-    // [cell addSubview:imv];
-    // [imv release];
+
+    UIImageView *imv = [[UIImageView alloc]initWithFrame:CGRectMake(3,2, 20, 25)];
+    UIImage *icon = [apps iconOfSize:ALApplicationIconSizeSmall forDisplayIdentifier:[displayIdentifiers objectAtIndex:indexPath.section]];
+    imv.image = icon;
+    //[cell addSubview:imv];
+    //cell.edgeInset = is_wildcat ? 68.0f : 39.0f;
+    [imv release];
+    cell.sectionHeaderWidth = isPad ? 39.0f : 68.0f;
 
     return cell;
 }
@@ -252,7 +256,7 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
     if (![self shouldDisplayListLauncher]) return %orig;
 
     UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, sectionHeaderWidth, searchRowHeight)];
-    NSIndexPath *indexPath = [NSIndexPath indexPathForRow:1 inSection:index];
+    //NSIndexPath *indexPath = [NSIndexPath indexPathForRow:1 inSection:index];
     NSString *displayIdentifier = [displayIdentifiers objectAtIndex:index];
     //NSString *displayIdentifier = [dataSource displayIdentifierForIndexPath:indexPath];
     //id m = [[[SBIconModel sharedInstance] applicationIconForDisplayIdentifier:displayIdentifier] getIconImage:is_wildcat()];
@@ -267,8 +271,6 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
     rec.origin.x = (size.width - rec.size.width) * 0.5f;
 
     iview.frame = rec;
-    iview.layer.borderWidth = 1;
-    iview.layer.borderColor = [UIColor blackColor].CGColor;
     //[iview setFrame:rec];
     [view addSubview:iview];
 
@@ -278,12 +280,14 @@ static inline BOOL is_wildcat() { return (UI_USER_INTERFACE_IDIOM()==UIUserInter
     [iview release];
 
 
-     // [icon release];
-     // [view setOpaque:0];
-     //[view setUserInteractionEnabled:YES];
 
 
-     //v.image = icon;
+    //  [icon release];
+    //  [view setOpaque:0];
+    //  [view setUserInteractionEnabled:YES];
+
+
+    //  v.image = icon;
 
     // CGRect r = [i frame];
     // r.size = [i size];
