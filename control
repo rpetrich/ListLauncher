@@ -1,15 +1,15 @@
-Author: twodayslate <zac+listlauncher6@gorak.us>
+Author: twodayslate <zac+listlauncher@gorak.us>
 Maintainer: BigBoss <bigboss@thebigboss.org>
 Name: ListLauncher6
 Package: com.twodayslate.listlauncher6
 Section: Tweaks
 Pre-Depends: firmware (>= 4.0)
-Depends: mobilesubstrate
-Version: 6.1
+Depends: mobilesubstrate, applist
+Version: 6.0
 Architecture: iphoneos-arm
-Description: Scrolling list of all your apps for quick access!
-Depiction: http://chpwn.com/cydia/listlauncher.html
-Homepage: http://chpwn.com/cydia/listlauncher.html
+Description: Scrolling list of all your apps for quick access in SpotLight!
+Depiction: http://zac.gorak.us/cydia/listlauncher
+Homepage: http://zac.gorak.us/cydia/listlauncher
 Sponsor: thebigboss.org <http://thebigboss.org>
 Tag: cydia::free, purpose::extension
 dev: twodayslate, chpwn
